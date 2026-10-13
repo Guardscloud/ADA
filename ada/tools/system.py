@@ -7,6 +7,7 @@ import re
 import shutil
 import subprocess
 import sys
+from contextvars import ContextVar
 from pathlib import Path
 
 from .. import config, safety
@@ -20,7 +21,8 @@ _PS_UTF8_PREAMBLE = (
     "$OutputEncoding=[System.Text.Encoding]::UTF8;"
 )
 
-# Ne olursa olsun çalıştırılmayan komutlar (diski/sistemi yok edenler)
+# Tehlikeli komutlar (diski/sistemi yok edenler, bilgisayarı kapatanlar). Güvenli modda hiçbir koşulda
+# çalıştırılmaz; "onayla her şey" modunda kullanıcı her seferinde onaylarsa çalıştırılır (bkz. config.safety_mode).
 HARD_BLOCK = [
     # rm -r / rm -rf ile kök, ev dizini veya kullanıcı klasörünün tamamı
     r"\brm\s+(-\S+\s+)*(/|~|~/|\$HOME/?|/\*|~/\*|/Users/?|/Users/[^/\s]+/?)(\s|;|&|\||$)",
@@ -31,7 +33,33 @@ HARD_BLOCK = [
     r"\b(shutdown|reboot|halt)\b",
     r"\bcsrutil\b",
     r">\s*/dev/(disk|rdisk)",
+    # Windows: kapatma/yeniden başlatma, disk biçimlendirme, sürücü kökünü silme, önyükleme ayarları
+    r"\b(Stop-Computer|Restart-Computer)\b",
+    r"\b(Format-Volume|Clear-Disk|Initialize-Disk|Remove-Partition)\b",
+    r"\bdiskpart\b",
+    r"\bbcdedit\b",
+    r"(^|[\s;&|(])format(\.com)?\s+[a-z]:",
+    r"\b(Remove-Item|rm|del|erase|rd|rmdir|ri)\b[^|;&]*\s['\"]?[a-z]:[\\/]*\*?['\"]?(\s|$)",
 ]
+
+DANGER_BLOCKED = (
+    "Bu komut bilgisayarı kapatabilir ya da sistemi/diski yok edebilir; güvenli modda ADA bunu çalıştırmaz. "
+    "Kullanıcı Ayarlar → Genel → Güvenlik modu'ndan 'Onayla her şey'i seçerse onayıyla çalıştırılabilir; "
+    "bunu kullanıcıya söyle, başka bir yolla aynı işi yapmaya çalışma."
+)
+# Kullanıcı bu çağrı için tehlikeli komutu onayladı mı? (agent._run_tool_inner ayarlar; araç iş parçacığına kopyalanır)
+DANGER_APPROVED: ContextVar[bool] = ContextVar("DANGER_APPROVED", default=False)
+
+
+def danger(command: str) -> bool:
+    """Komut tehlikeli kalıplardan birine uyuyor mu?"""
+    return any(re.search(pattern, command or "", re.IGNORECASE) for pattern in HARD_BLOCK)
+
+
+def check_danger(command: str) -> None:
+    """Tehlikeli komut onaylanmadıysa ToolError fırlatır (run_shell ve terminal araçları çağırır)."""
+    if danger(command) and not DANGER_APPROVED.get():
+        raise ToolError(DANGER_BLOCKED)
 
 # Onay gerektiren kalıplar (smart modunda)
 RISKY = [
@@ -151,9 +179,7 @@ if config.ENABLE_SHELL:
         risk=_shell_risk,
     )
     def run_shell(command: str, cwd: str = "", timeout: int = 0) -> ToolResult:
-        for pattern in HARD_BLOCK:
-            if re.search(pattern, command, re.IGNORECASE):
-                raise ToolError("Bu komut sistemi/diski yok edebilir; ADA bunu hiçbir koşulda çalıştırmaz.")
+        check_danger(command)
         workdir = resolve_path(cwd, must_exist=True) if cwd else HOME
         encoding = None
         if sys.platform.startswith("win"):

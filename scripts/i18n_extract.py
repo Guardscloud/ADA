@@ -99,8 +99,8 @@ def from_frontend() -> set[str]:
 
 
 # Çıkarıcının yakalayamadığı arayüz metinleri (elle eklenir) ve çevrilmeyecek olanlar (dil seçici)
-EXTRA = {"E-posta", "{0} motor"}
-IGNORE = {"Arayüz dili", "Auto (", "Language", "Language / Dil"}
+EXTRA = {"E-posta", "{0} motor", "Tehlikeli komut: bilgisayarı kapatabilir ya da verileri kalıcı olarak silebilir"}
+IGNORE = {"Arayüz dili", "Auto (", "Language", "Language / Dil", "Türkçe", "Français", "ıİğĞüÜşŞöÖçÇâÂîÎûÛáàãäéèêëíìïóòõôúùñ"}
 
 
 def catalog() -> list[str]:

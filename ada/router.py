@@ -606,7 +606,9 @@ _ACTION = re.compile(
     r"\b(send|open|close|install|download|upload|delete|remove|create|make|prepare|run|save|set up|fix|start|move|copy|"
     r"write|add|click|find|check|clean|update|try again|retry|schick|sende|öffne|erstell|lösch|speicher|schreib|starte|"
     r"envoie|ouvre|crée|supprime|enregistre|écris|lance|envía|abre|crea|elimina|guarda|escribe|ejecuta|envie|abra|crie|"
-    r"exclua|salve|escreva|invia|apri|cancella|salva|scrivi|esegui)\b|"
+    r"exclua|salve|escreva|invia|apri|cancella|salva|scrivi|esegui|"
+    r"shut ?down|restart|reboot|turn off|power off|log ?off|herunterfahren|neu starten|éteins|redémarre|apaga|reinicia|"
+    r"desliga|reinicie|spegni|riavvia)\b|выключи|перезагрузи|"
     r"отправ|открой|созда|удали|сохрани|напиши|запусти|установи|скачай|найди|проверь", re.I)
 
 

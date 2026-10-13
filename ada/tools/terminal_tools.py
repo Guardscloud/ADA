@@ -15,12 +15,10 @@ from .. import config, terminal
 from . import ToolError, ToolResult, tool
 
 if config.ENABLE_SHELL:
-    from .system import HARD_BLOCK, _shell_risk
+    from .system import _shell_risk, check_danger
 
     def _check(command: str) -> None:
-        for pattern in HARD_BLOCK:
-            if re.search(pattern, command, re.IGNORECASE):
-                raise ToolError("Bu komut sistemi/diski yok edebilir; ADA bunu hiçbir koşulda çalıştırmaz.")
+        check_danger(command)
 
     def _session(session_id: str) -> terminal.Session:
         s = terminal.get(session_id)

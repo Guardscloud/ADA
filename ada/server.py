@@ -191,6 +191,7 @@ async def status():
         "fallback_model": config.QWEN_MODEL if config.PROVIDER == "gemini" and config.QWEN_FALLBACK else None,
         "effort": config.EFFORT if config.PROVIDER == "anthropic" else "-",
         "autonomy": config.AUTONOMY,
+        "safety_mode": config.safety_mode(),
         "api_key": has_key,
         "computer": config.ENABLE_COMPUTER,
         "shell": config.ENABLE_SHELL,

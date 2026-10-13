@@ -37,6 +37,7 @@ FIELDS: dict[str, tuple[str, str, list[str] | None, bool, str]] = {
     "ADA_LLM_MODEL": ("Kendi sunucum: model", "text", None, False, "gpt-oss:20b"),
     "ADA_LLM_API_KEY": ("Kendi sunucum: API anahtarı", "text", None, True, ""),
     "ADA_AUTONOMY": ("Özerklik", "select", ["smart", "ask", "full"], False, "smart"),
+    "ADA_SAFETY_MODE": ("Güvenlik modu (tehlikeli komutlar: kapatma, disk silme…)", "select", ["safe", "approve"], False, "safe"),
     "ADA_ENABLE_SHELL": ("Kabuk ve dosya sistemi", "bool", None, False, "true"),
     "ADA_ENABLE_COMPUTER": ("Ekran kontrolü (fare/klavye)", "bool", None, False, "true"),
     "ADA_ENABLE_MAC_APPS": ("Mail / Takvim / Notlar (macOS)", "bool", None, False, "true" if config.IS_MAC else "false"),

@@ -108,6 +108,16 @@ MAX_TURN_MINUTES = float(os.getenv("ADA_MAX_TURN_MINUTES", "20"))
 #   smart - yalnızca tehlikeli işlemlerde onay ister (sudo, rm -rf, e-posta gönderme...)
 #   ask   - yan etkisi olan her araçta onay ister
 AUTONOMY = os.getenv("ADA_AUTONOMY", "smart").strip().lower()
+
+
+def safety_mode() -> str:
+    """Tehlikeli komutlar (bilgisayarı kapatma, disk biçimlendirme, sistemi silme) için güvenlik modu.
+
+    "safe"    - güvenli mod (varsayılan): bu komutlar hiçbir koşulda çalıştırılmaz
+    "approve" - onayla her şey: ADA her seferinde sorar, kullanıcı onaylarsa çalıştırır (tam özerk modda bile sorar;
+                başında kimsenin olmadığı rutin/arka plan işlerinde yine çalıştırılmaz)
+    Ayar yeniden başlatmadan geçerli olur."""
+    return "approve" if os.getenv("ADA_SAFETY_MODE", "safe").strip().lower() == "approve" else "safe"
 APPROVAL_TIMEOUT = int(os.getenv("ADA_APPROVAL_TIMEOUT", "900"))
 
 WORKSPACE = Path(os.getenv("ADA_WORKSPACE", HOME_DIR / "workspace")).expanduser().resolve()

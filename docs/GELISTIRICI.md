@@ -288,3 +288,14 @@ uv run python scripts/i18n_extract.py --check   # her dilde eksik çevirileri sa
 
 Eksikleri sözlük dosyalarına ekleyin; değişkenli metinlerde `{0}`, `{1}` yer tutucuları korunmalıdır. Yeni dil eklemek için
 `<dil>.json` sözlüğünü oluşturup kodu `ada/config.py` içindeki `LANGS` ve `frontend/src/i18n.js` içindeki `LANGS` listelerine ekleyin.
+
+## Güvenlik modu
+
+Tehlikeli komutlar (bilgisayarı kapatma/yeniden başlatma, disk biçimlendirme, sürücü kökünü ya da sistemi silme) için
+`ADA_SAFETY_MODE` ayarı vardır (Ayarlar → Genel → Güvenlik modu; yeniden başlatma gerekmez):
+
+- `safe` (varsayılan, **güvenli mod**): bu komutlar hiçbir koşulda çalıştırılmaz.
+- `approve` (**onayla her şey**): ADA her seferinde onay ister; onaylarsanız çalıştırır. Tam özerk modda bile sorar ve
+  "her zaman izin ver" sunmaz. Başında kimsenin olmadığı işlerde (rutinler, arka plan görevleri) yine çalıştırmaz.
+
+Kalıplar `ada/tools/system.py` içindeki `HARD_BLOCK` listesindedir; `run_shell` ve terminal araçları için geçerlidir.

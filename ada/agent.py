@@ -376,8 +376,44 @@ async def _run_tool_inner(name: str, args, approved: list[bool]) -> ToolResult:
     if limit:
         return ToolResult(limit, is_error=True)
 
+    # Tehlikeli komut (kapatma, disk silme…): güvenli modda reddedilir; "onayla her şey" modunda özerklik
+    # seviyesinden bağımsız olarak her seferinde sorulur ("her zaman izin ver" sunulmaz)
+    danger_token = None
+    command = _danger_command(name, args)
+    if command:
+        from .runtime import UNATTENDED
+        from .tools import system as system_tools
+
+        if config.safety_mode() != "approve" or UNATTENDED.get():
+            return ToolResult(system_tools.DANGER_BLOCKED, is_error=True)
+        ok = await approval.request("Tehlikeli komut: bilgisayarı kapatabilir ya da verileri kalıcı olarak silebilir", command[:800])
+        approved.append(ok)
+        if not ok:
+            return ToolResult("Kullanıcı bu tehlikeli komutu onaylamadı. Çalıştırma; başka bir yolla da deneme.", is_error=True)
+        danger_token = system_tools.DANGER_APPROVED.set(True)
+    try:
+        return await _run_approved_tool(tool, name, args, approved, skip_risk=bool(command))
+    finally:
+        if danger_token is not None:
+            system_tools.DANGER_APPROVED.reset(danger_token)
+
+
+def _danger_command(name: str, args) -> str:
+    """Kabuk/terminal aracının komutu tehlikeli kalıplara uyuyorsa komutu döner."""
+    if not config.ENABLE_SHELL or not isinstance(args, dict) or not (name == "run_shell" or name.startswith("terminal_")):
+        return ""
+    from .tools import system as system_tools
+
+    for key in ("command", "text", "input"):
+        value = args.get(key)
+        if isinstance(value, str) and system_tools.danger(value):
+            return value
+    return ""
+
+
+async def _run_approved_tool(tool, name: str, args, approved: list[bool], skip_risk: bool = False) -> ToolResult:
     reason = None
-    if tool.risk is not None and config.AUTONOMY != "full":
+    if tool.risk is not None and config.AUTONOMY != "full" and not skip_risk:
         try:
             reason = tool.risk(args)
         except Exception:  # noqa: BLE001

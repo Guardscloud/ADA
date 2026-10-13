@@ -9,6 +9,8 @@ const PROVIDER_NAMES = {
   gemini: "Yalnız Gemini",
   anthropic: "Yalnız Claude",
   selfhost: "Yalnız kendi sunucum",
+  safe: "Güvenli mod — tehlikeli komutlar asla çalışmaz",
+  approve: "Onayla her şey — tehlikeli komutlar onayınızla çalışır",
 };
 
 export default function SettingsPanel({ onClose }) {

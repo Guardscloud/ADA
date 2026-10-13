@@ -123,3 +123,77 @@ def test_date_context_names_last_month():
 
     text = agent._date_block()["text"]
     assert "Geçen ay:" in text and "Bu çeyrek:" in text
+
+
+# ---------------------------------------------------------------- güvenlik modu: güvenli / onayla her şey
+
+def test_windows_shutdown_and_disk_commands_are_dangerous():
+    from ada.tools import system
+
+    for cmd in ("Stop-Computer -Force", "Restart-Computer", "shutdown /s /t 0", "Format-Volume -DriveLetter D", "format D: /q",
+                "Clear-Disk -Number 1 -RemoveData", "diskpart /s x.txt", "Remove-Item C:/ -Recurse -Force", "rd /s /q C:/",
+                "Remove-Item D: -Recurse", "bcdedit /delete {current}"):
+        assert system.danger(cmd), cmd
+    for cmd in ("Get-ChildItem C:/Users", "Remove-Item C:/Temp/eski.txt", "Get-Process", "echo format the report",
+                "Write-Output 'Restart the service later'", "npm run format", "Remove-Item ./build -Recurse"):
+        assert not system.danger(cmd), cmd
+
+
+def _shell(command):
+    import asyncio
+
+    from ada import agent
+
+    return asyncio.run(agent._run_tool("run_shell", {"command": command, "timeout": 5}))
+
+
+def test_safe_mode_never_runs_dangerous_commands(monkeypatch):
+    from ada import approval, config
+
+    monkeypatch.delenv("ADA_SAFETY_MODE", raising=False)
+    asked = []
+
+    async def fake_request(title, detail, key=None):
+        asked.append(title)
+        return True
+
+    monkeypatch.setattr(approval, "request", fake_request)
+    assert config.safety_mode() == "safe"
+    r = _shell("Stop-Computer -WhatIf")
+    assert r.is_error and "güvenli modda" in r.content and "Onayla her şey" in r.content and not asked
+
+
+def test_approve_mode_asks_every_time_and_runs_only_if_approved(monkeypatch):
+    from ada import approval, config, runtime
+    from ada.tools import system
+
+    monkeypatch.setenv("ADA_SAFETY_MODE", "approve")
+    monkeypatch.setattr(config, "AUTONOMY", "full")  # tam özerk modda bile sorulur
+    asked, answer = [], [False]
+
+    async def fake_request(title, detail, key=None):
+        asked.append((title, detail, key))
+        return answer[0]
+
+    monkeypatch.setattr(approval, "request", fake_request)
+    # -WhatIf: PowerShell komutu çalıştırmaz, yalnızca ne yapacağını yazar (bilgisayar kapanmaz)
+    r = _shell("Stop-Computer -WhatIf")
+    assert r.is_error and "onaylamadı" in r.content
+    assert asked[0][0].startswith("Tehlikeli komut") and asked[0][1] == "Stop-Computer -WhatIf" and asked[0][2] is None
+
+    answer[0] = True
+    r = _shell("Stop-Computer -WhatIf")
+    assert len(asked) == 2 and "güvenli modda" not in r.content and "onaylamadı" not in r.content
+    assert system.DANGER_APPROVED.get() is False  # onay yalnızca o çağrı için geçerlidir
+
+    # Başında kimse yokken (rutin, arka plan işi) onay modunda da çalıştırılmaz
+    token = runtime.UNATTENDED.set(True)
+    try:
+        r = _shell("Stop-Computer -WhatIf")
+        assert r.is_error and "güvenli modda" in r.content and len(asked) == 2
+    finally:
+        runtime.UNATTENDED.reset(token)
+
+    # Tehlikeli olmayan komutlar ve başka araçlar etkilenmez
+    assert not _shell("echo tamam").is_error
+    assert len(asked) == 2

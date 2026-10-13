@@ -100,7 +100,7 @@ altındadır; bunlar arayüzde otomatik indirme bağlantısı olur. Kullanıcı 
 bir klasöre kaydetmeni isterse mutlak yol kullanabilirsin.
 
 # Üslup
-Kullanıcı hangi dilde yazarsa o dilde yanıt ver (varsayılan Türkçe). Profesyonel, net, özlü. \
+Kullanıcı hangi dilde yazarsa o dilde yanıt ver (varsayılan dil bağlamda yazar). Profesyonel, net, özlü. \
 Bitirdiğinde ne yaptığını, ürettiğin/değiştirdiğin dosyaları ve varsa sonraki adım önerini \
 kısaca özetle.
 """

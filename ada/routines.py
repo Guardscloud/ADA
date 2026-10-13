@@ -80,7 +80,7 @@ CURRENT: ContextVar[str | None] = ContextVar("CURRENT_ROUTINE", default=None)
 
 # ---------------------------------------------------------------- dosya biçimi
 
-_FOLD = str.maketrans("ıİğĞüÜşŞöÖçÇâÂîÎûÛ", "iIgGuUsSoOcCaAiIuU")
+_FOLD = str.maketrans("ıİğĞüÜşŞöÖçÇâÂîÎûÛáàãäéèêëíìïóòõôúùñ", "iIgGuUsSoOcCaAiIuUaaaaeeeeiiioooouun")
 
 
 def _fold(text: str) -> str:
@@ -89,13 +89,13 @@ def _fold(text: str) -> str:
 
 
 _KEYS = {  # alan → kabul edilen anahtarlar (ilki dosyaya yazılan kanonik Türkçe anahtar)
-    "name": ("ad", "isim", "name", "baslik", "title"),
-    "times": ("saat", "saatler", "time", "times", "zaman"),
-    "days": ("gunler", "gun", "days", "weekdays"),
+    "name": ("ad", "isim", "name", "baslik", "title", "titel", "titre", "nombre", "nome", "titulo", "titolo"),
+    "times": ("saat", "saatler", "time", "times", "zaman", "at", "uhrzeit", "zeit", "heure", "hora", "ora"),
+    "days": ("gunler", "gun", "days", "weekdays", "day", "tage", "jours", "dias", "giorni"),
     "interval": ("aralik", "interval", "her"),
-    "enabled": ("aktif", "enabled", "durum"),
-    "notify": ("bildirim", "notify"),
-    "max_minutes": ("sure", "max_dakika", "timeout"),
+    "enabled": ("aktif", "enabled", "durum", "active", "aktiv", "actif", "activo", "ativo", "attivo"),
+    "notify": ("bildirim", "notify", "notification", "notifications"),
+    "max_minutes": ("sure", "max_dakika", "timeout", "duration", "limit"),
 }
 _ALIASES = {alias: field for field, names in _KEYS.items() for alias in names}
 
@@ -119,19 +119,22 @@ def parse_times(value: str) -> list[str]:
 
 
 _DAY_NAMES = (
-    ("pazartesi", "pzt", "pts", "pt", "mon", "monday"),
-    ("sali", "sal", "tue", "tues", "tuesday"),
-    ("carsamba", "car", "crs", "wed", "wednesday"),
-    ("persembe", "per", "prs", "thu", "thur", "thurs", "thursday"),
-    ("cuma", "cum", "fri", "friday"),
-    ("cumartesi", "cmt", "cts", "sat", "saturday"),
-    ("pazar", "paz", "sun", "sunday"),
+    # Türkçe, İngilizce, Almanca, Fransızca, İspanyolca, Portekizce, İtalyanca (aksanlar _fold ile sadeleşir)
+    ("pazartesi", "pzt", "pts", "pt", "mon", "monday", "montag", "lundi", "lunes", "segunda", "lunedi"),
+    ("sali", "sal", "tue", "tues", "tuesday", "dienstag", "mardi", "martes", "terca", "martedi"),
+    ("carsamba", "car", "crs", "wed", "wednesday", "mittwoch", "mercredi", "miercoles", "quarta", "mercoledi"),
+    ("persembe", "per", "prs", "thu", "thur", "thurs", "thursday", "donnerstag", "jeudi", "jueves", "quinta", "giovedi"),
+    ("cuma", "cum", "fri", "friday", "freitag", "vendredi", "viernes", "sexta", "venerdi"),
+    ("cumartesi", "cmt", "cts", "sat", "saturday", "samstag", "samedi", "sabado", "sabato"),
+    ("pazar", "paz", "sun", "sunday", "sonntag", "dimanche", "domingo", "domenica"),
 )
 _DAYS = {name: i for i, names in enumerate(_DAY_NAMES) for name in names} | {str(i): i for i in range(7)}
 _DAY_GROUPS = (  # önce bunlar aranır; "hafta sonu, pazartesi" gibi karışımlar da olur
-    (r"\bher\s*gun(?:u|leri)?\b|\bdaily\b|\bevery\s*day\b|\btum\s*gunler\b", range(7)),
-    (r"\bhafta\s*ic(?:i|leri)\b|\bweekdays?\b|\bis\s*gunleri\b", range(5)),
-    (r"\bhafta\s*son(?:u|lari)\b|\bweekends?\b", (5, 6)),
+    (r"\bher\s*gun(?:u|leri)?\b|\bdaily\b|\bevery\s*day\b|\btum\s*gunler\b|\btaglich\b|\bjeden\s*tag\b|"
+     r"\btous\s*les\s*jours\b|\bcada\s*dia\b|\btodos\s*los\s*dias\b|\btodos\s*os\s*dias\b|\bogni\s*giorno\b", range(7)),
+    (r"\bhafta\s*ic(?:i|leri)\b|\bweekdays?\b|\bis\s*gunleri\b|\bwerktags?\b|\ben\s*semaine\b|"
+     r"\bdias\s*laborables\b|\bdias\s*uteis\b|\bgiorni\s*feriali\b", range(5)),
+    (r"\bhafta\s*son(?:u|lari)\b|\bweekends?\b|\bwochenende\b|\bfin(?:es)?\s*de\s*semana\b|\bfine\s*settimana\b", (5, 6)),
 )
 _DAY_FILLER = {"ve", "and", "her", "every", "gun", "gunu", "gunleri"}
 
@@ -188,8 +191,8 @@ def parse_interval(value: str) -> int:
     return minutes
 
 
-_TRUE = {"evet", "e", "true", "yes", "on", "1", "acik", "aktif", "var"}
-_FALSE = {"hayir", "h", "false", "no", "off", "0", "kapali", "pasif", "yok"}
+_TRUE = {"evet", "e", "true", "yes", "y", "on", "1", "acik", "aktif", "var", "ja", "oui", "si", "sim", "da"}
+_FALSE = {"hayir", "h", "false", "no", "n", "off", "0", "kapali", "pasif", "yok", "nein", "non", "nao", "net"}
 
 
 def _bool(value: str, key: str) -> bool:

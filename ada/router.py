@@ -74,11 +74,37 @@ _PATTERNS: list[tuple[str, re.Pattern]] = [
 ]
 
 
+# Görev başka dilde yazıldığında da türü tanınsın: İngilizce ağırlıklı, ayrıca Almanca, Fransızca, İspanyolca,
+# Portekizce, İtalyanca ve Rusça anahtar sözcükler. Eşleşme olmazsa tür uzunluğa göre seçilir (her dilde çalışır).
+_INTL: dict[str, re.Pattern] = {
+    "gizli": re.compile(r"\b(confidential|keep (it|this) (private|secret)|private data|personal data|local model|"
+                        r"do(n't| not) (upload|send)|vertraulich|confidentiel|confidencial|riservato)\b|конфиденциальн", re.I),
+    "ekran": re.compile(r"\b(screen|click|mouse|cursor|window|button|desktop|open the app|drag|keyboard|browser|tab|"
+                        r"bildschirm|klick|maus|fenster|écran|cliqu|souris|fenêtre|pantalla|clic|ratón|ventana|tela|"
+                        r"janela|schermo|finestra)\w*|экран|щёлкн|щелкн|мыш|окн[оа]|кнопк", re.I),
+    "kod": re.compile(r"\b(code|script|command line|shell|compile|function|software|program|automation|bug|"
+                      r"programm|skript|befehl|código|codice|commande|logiciel)\w*|\bкод|скрипт|програм", re.I),
+    "derin": re.compile(r"\b(analy[sz]e|strategy|plan out|prove|proof|math|calculate|optimi[sz]e|architecture|design|"
+                        r"evaluate|in depth|step by step|decide|risk|business plan|analysier|strategie|berechn|entwerf|"
+                        r"stratégie|calcul|concev|estrategia|analiza|diseña|estratégia|analis|strategia|progett)\w*|"
+                        r"анализ|стратег|рассчита|спроектир|докаж", re.I),
+    "ofis": re.compile(r"\b(word|excel|presentation|slides?|powerpoint|pdf|report|spreadsheet|table|document|letter|"
+                       r"e-?mail|calendar|meeting|invoice|quote|contract|resume|cv|bericht|tabelle|dokument|brief|"
+                       r"rechnung|vertrag|rapport|tableau|lettre|facture|contrat|informe|tabla|documento|carta|factura|"
+                       r"contrato|relatório|tabela|fatura|relazione|tabella|lettera|fattura|contratto)\b|"
+                       r"отч[её]т|таблиц|документ|письм|презентац|сч[её]т|договор", re.I),
+    "arastirma": re.compile(r"\b(research|search the web|online|news|compare|price|source|latest|current|what is|who is|"
+                            r"find me|look up|investigate|recherch|vergleich|preis|nachricht|actualité|compar|prix|"
+                            r"investiga|noticias|precio|pesquis|notícias|preço|ricerca|notizie|prezzo)\w*|"
+                            r"исследу|найди|новост|сравн|цен[аы]", re.I),
+}
+
+
 def classify(text: str, has_image: bool = False, previous: str | None = None) -> str:
     """`previous`: aynı görevin önceki turunun türü — "olmadı, tekrar dene" gibi devam mesajları onu sürdürür."""
     t = text or ""
     for kind, pattern in _PATTERNS:
-        if pattern.search(t):
+        if pattern.search(t) or _INTL[kind].search(t):
             return kind
     if has_image:
         return "ekran" if re.search(r"ekran|görüntü", t, re.I) else "ofis"
@@ -569,10 +595,19 @@ _GIVE_UP = re.compile(
     r"yapamad|yapamıyorum|yapamam\b|gerçekleştiremedi|başaramad|başarısız oldu|başarısız oldum|mümkün değil|imkans[ıi]z|imkâns[ıi]z|"
     r"erişimim yok|erişemiyorum|manuel olarak|elle (yap|gir|gönder)|kendiniz|sizin (yapmanız|tarafınızdan)|tamamlanamadı|"
     r"gönderilemedi|açılamadı|bulamadım|hata (aldım|verdi|oluştu)|nasıl yardımcı olabilirim|anlaşılamadı|"
-    r"\bcan't\b|\bcannot\b|unable to|i'm sorry", re.I)
+    r"\bcan't\b|\bcannot\b|unable to|i'm sorry|i was(n't| not) able|could(n't| not) (complete|do|finish)|failed to|"
+    r"not possible|do it yourself|how can i help|"
+    r"konnte nicht|nicht möglich|je n'ai pas pu|impossible de|no pude|no fue posible|não consegui|não foi possível|"
+    r"non sono riuscit|non è possibile|не удалось|не могу|невозможно", re.I)
 _ACTION = re.compile(
     r"\b(gönder|aç|kapat|kur|indir|yükle|sil|oluştur|hazırla|çalıştır|kaydet|ayarla|düzelt|başlat|taşı|kopyala|yaz|ekle|"
-    r"tıkla|bul|kontrol et|temizle|güncelle|dene|tekrar dene)\w{0,4}\b", re.I)
+    r"tıkla|bul|kontrol et|temizle|güncelle|dene|tekrar dene)\w{0,4}\b|"
+    # Başka dillerde iş isteyen fiiller (emir kipi): sohbet değil, iş yapabilen model seçilsin
+    r"\b(send|open|close|install|download|upload|delete|remove|create|make|prepare|run|save|set up|fix|start|move|copy|"
+    r"write|add|click|find|check|clean|update|try again|retry|schick|sende|öffne|erstell|lösch|speicher|schreib|starte|"
+    r"envoie|ouvre|crée|supprime|enregistre|écris|lance|envía|abre|crea|elimina|guarda|escribe|ejecuta|envie|abra|crie|"
+    r"exclua|salve|escreva|invia|apri|cancella|salva|scrivi|esegui)\b|"
+    r"отправ|открой|созда|удали|сохрани|напиши|запусти|установи|скачай|найди|проверь", re.I)
 
 
 def _parts(m: dict) -> list[dict]:
@@ -603,14 +638,16 @@ def assess(messages: list[dict], start: int, *, kind: str, background: bool, tas
     if calls == 0:
         if not final:
             return "model boş yanıt verdi"
-        if re.search(r"nasıl yardımcı olabilirim|anlaşılamadı", final, re.I) and (background or len(task) > 40):
+        if re.search(r"nasıl yardımcı olabilirim|anlaşılamadı|how can i help", final, re.I) and (background or len(task) > 40):
             return "model görevi görmeden genel bir yanıt verdi"
         if gave_up and (background or _ACTION.search(task)):
             return "hiçbir araç denemeden 'yapamam' dedi"
         if background or (kind in ("ekran", "kod", "ofis") and _ACTION.search(task) and len(task) < 400):
             return "istenen iş için hiçbir işlem yapmadan bitirdi"
         return None
-    if gave_up and re.search(r"yapamad|başaramad|gerçekleştiremedi|gönderilemedi|tamamlanamadı|başarısız", final, re.I):
+    if gave_up and re.search(r"yapamad|başaramad|gerçekleştiremedi|gönderilemedi|tamamlanamadı|başarısız|"
+                             r"was(n't| not) able|could(n't| not) (complete|do|finish)|failed to|konnte nicht|"
+                             r"je n'ai pas pu|no pude|não consegui|non sono riuscit|не удалось", final, re.I):
         return "işi bitirmeden 'yapamadım' dedi"
     return None
 

@@ -169,6 +169,16 @@ def _os_hint() -> str:
     return "Sistem: macOS." if config.IS_MAC else "Sistem: Linux."
 
 
+def _language_hint() -> str:
+    """Kullanıcı her dilde yazabilir: yanıt onun dilinde; dil belli değilse arayüz dili kullanılır."""
+    name = config.LANG_NAMES.get(config.ui_language(), "English")
+    return (
+        "Dil: Kullanıcı hangi dilde yazarsa o dilde düşün ve yanıt ver; ürettiğin belgeler, raporlar ve dosya adları da "
+        f"o dilde olsun. Dil belli değilse (ör. zamanlanmış iş, yalnızca dosya ya da ekran görüntüsü) varsayılan dil: {name}. "
+        "Rutin ve görev dosyaları her dilde yazılabilir; talimatı yazıldığı dilde anla, sonucu aynı dilde yaz."
+    )
+
+
 def _routines_index() -> str:
     from . import routines
 
@@ -198,7 +208,8 @@ def _context_block() -> dict:
     """Değişken bağlam (tarih, sistem, hafıza, beceri ve rutin dizini). Önbellek noktasından SONRA gelir."""
     from . import skills
 
-    parts = [_date_block()["text"], _os_hint(), _autonomy_hint(), _memory_digest(), skills.index_text(), _routines_index()]
+    parts = [_date_block()["text"], _os_hint(), _language_hint(), _autonomy_hint(), _memory_digest(), skills.index_text(),
+             _routines_index()]
     return {"type": "text", "text": "\n\n".join(p for p in parts if p)}
 
 

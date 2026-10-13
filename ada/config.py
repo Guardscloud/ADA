@@ -170,6 +170,30 @@ DONATE_AMOUNTS = (1, 2, 3, 4, 5)
 UPDATE_AUTO_CHECK = _bool("ADA_UPDATE_AUTO_CHECK", True)
 # Arayüz dilleri (sözlükler: frontend/public/assets/i18n/<dil>.json). ADA_LANG: "auto" (sistem dili) ya da bir kod.
 LANGS = ("tr", "en", "de", "fr", "es", "pt", "it", "ru", "zh", "ja")
+LANG_NAMES = {"tr": "Türkçe", "en": "English", "de": "Deutsch", "fr": "Français", "es": "Español", "pt": "Português",
+              "it": "Italiano", "ru": "Русский", "zh": "中文", "ja": "日本語"}
+
+
+def ui_language() -> str:
+    """Geçerli arayüz dili kodu. "auto" ise işletim sisteminin dili; desteklenmiyorsa İngilizce."""
+    value = os.getenv("ADA_LANG", "auto").strip().lower()
+    if value in LANGS:
+        return value
+    code = ""
+    try:
+        import locale
+
+        if IS_WIN:
+            import ctypes
+
+            code = (locale.windows_locale.get(ctypes.windll.kernel32.GetUserDefaultUILanguage()) or "")[:2].lower()
+        else:
+            code = (locale.getlocale()[0] or os.getenv("LANG", ""))[:2].lower()
+    except Exception:  # noqa: BLE001 - dil okunamazsa İngilizce
+        code = ""
+    return code if code in LANGS else "en"
+
+
 # Masaüstü bildirimleri (rutin bitti, onay bekleniyor, hedef durumu...)
 NOTIFICATIONS = _bool("ADA_NOTIFICATIONS", True)
 

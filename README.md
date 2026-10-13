@@ -34,3 +34,20 @@ Bir hata bulduysanız ya da bir fikriniz varsa:
 - Ya da doğrudan buradan: [yeni kayıt aç](https://github.com/Guardscloud/ADA/issues/new/choose)
 
 Her geri bildirim okunur ve ADA'nın geliştirilmesinde kullanılır.
+
+## Açık kaynak
+
+ADA açık kaynaklıdır ([MIT lisansı](LICENSE)). Kodu inceleyebilir, değiştirebilir ve katkıda bulunabilirsiniz.
+
+Kaynaktan çalıştırmak için [uv](https://docs.astral.sh/uv/) ve Node 18+ gerekir:
+
+```powershell
+uv sync
+cd frontend; npm install; npm run build; cd ..
+uv run pytest -q        # testler
+uv run ada-app          # masaüstü penceresi  (yalnızca tarayıcı için: uv run ada)
+```
+
+Mimari, ayarlar ve geliştirme notları: [docs/GELISTIRICI.md](docs/GELISTIRICI.md). Katkılar için bir kayıt açın ya da doğrudan değişiklik isteği (pull request) gönderin.
+
+"ADA" adı ve Duck Team ördek logosu proje sahibine aittir; MIT lisansı kodu kapsar, adı ve logoyu kapsamaz.

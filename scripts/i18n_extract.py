@@ -86,7 +86,8 @@ def from_python() -> set[str]:
                 skip |= {id(v) for v in node.values}
             elif isinstance(node, ast.Constant) and isinstance(node.value, str):
                 text = node.value
-            if text and _wanted(text, id(node) in forced):
+            # Ayar adları arayüzde görünür: Türkçe harf içermeyenler de alınır ("Kabuk ve dosya sistemi")
+            if text and _wanted(text, id(node) in forced or path.name == "settings.py"):
                 found.add(text.strip())
     return found
 

@@ -9,6 +9,9 @@ const PROVIDER_NAMES = {
   gemini: "Yalnız Gemini",
   anthropic: "Yalnız Claude",
   selfhost: "Yalnız kendi sunucum",
+  smart: "Akıllı onay",
+  ask: "Her işlemde sorar",
+  full: "Tam özerk",
   safe: "Güvenli mod — tehlikeli komutlar asla çalışmaz",
   approve: "Onayla her şey — tehlikeli komutlar onayınızla çalışır",
 };

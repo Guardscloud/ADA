@@ -4,7 +4,7 @@
 
 ADA is an autonomous AI worker that runs on your own computer. Describe a job — a report, an analysis, a presentation, an email, some research, or a chore on your PC — and ADA carries it out from start to finish.
 
-<p align="center"><img src="docs/images/main.png" alt="ADA main screen" width="900"></p>
+<p align="center"><img src="docs/images/tour.gif" alt="A quick tour of ADA: setup, tasks, control menu, safety mode and languages" width="900"></p>
 
 ## Download
 
@@ -14,7 +14,26 @@ ADA is an autonomous AI worker that runs on your own computer. Describe a job �
 - No administrator rights needed; ADA installs for your user only.
 - On first launch ADA asks a few short questions (your name, an AI key, how independently it should work, what runs in the background).
 
-> **Windows warning:** ADA is signed with our own certificate, which Windows does not recognise yet, so the first run may show "Windows protected your PC". Choose **More info → Run anyway** to continue.
+
+## Getting started
+
+**1. Install.** Download and run `ADA-Setup.exe`. If Windows shows **"Windows protected your PC"**, click **More info**, then **Run anyway**. The warning appears because ADA is signed with our own certificate rather than a paid one that Windows already knows. ADA is open source, so you can read exactly what it does, and each release page lists the file's SHA-256 so you can check your download.
+
+**2. Add an AI key (free).** ADA needs an AI model to work. The quickest free option is Google Gemini:
+
+1. Open [aistudio.google.com/apikey](https://aistudio.google.com/apikey) and sign in with a Google account.
+2. Click **Create API key**, then **Copy**.
+3. Paste it into the key field on ADA's setup screen and click **Save**. ADA checks the key and lists the available models.
+
+<p align="center"><img src="docs/images/key-step.png" alt="Pasting the AI key during setup" width="520"></p>
+
+No key? ADA also works with local models: install [Ollama](https://ollama.com), pull a model, and ADA finds it by itself. You can add more providers (Claude, OpenAI, Groq and others) later in **Settings → AI**.
+
+**3. Give it a job.** Type what you need in plain language, for example:
+
+- *"Research the electric vehicle charging market and write a Word report with sources."*
+- *"Sort the files on my desktop into folders by type."*
+- *"Every weekday at 09:00, summarise the news about my industry."*
 
 ## What it does
 
@@ -23,6 +42,7 @@ ADA is an autonomous AI worker that runs on your own computer. Describe a job �
 - **Many AI models:** uses local models on your machine (Ollama, LM Studio and others) and any cloud models you add a key for (Gemini, Claude, OpenAI and more), and picks the best fit for each kind of work. If one model hits a limit, the job continues with the next.
 - **Watchdog:** keeps an eye on disk, memory, CPU and internet, and tells you when something is wrong.
 - **You stay in control:** you choose when ADA must ask before acting, and there is a one-click emergency stop.
+- **Safety mode:** commands that could shut down the computer or wipe a disk never run in safe mode; if you switch to *anything with approval*, ADA asks you every single time.
 
 | First-run setup | You decide how independent ADA is |
 |---|---|

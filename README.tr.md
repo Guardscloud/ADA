@@ -4,7 +4,7 @@
 
 ADA, bilgisayarınızda çalışan otonom bir yapay zekâ çalışanıdır: rapor, analiz, sunum, e-posta, araştırma ve bilgisayardaki işleri görevi yazdığınızda baştan sona kendisi yapar.
 
-<p align="center"><img src="docs/images/main.png" alt="ADA ana ekranı" width="900"></p>
+<p align="center"><img src="docs/images/tour.gif" alt="ADA turu: kurulum, görevler, Kontrol menüsü, güvenlik modu ve diller" width="900"></p>
 
 ## İndir
 
@@ -14,7 +14,26 @@ ADA, bilgisayarınızda çalışan otonom bir yapay zekâ çalışanıdır: rapo
 - Yönetici izni gerekmez; yalnızca sizin kullanıcınız için kurulur.
 - İlk açılışta birkaç kısa soru sorar (ad, yapay zekâ anahtarı, özerklik, arka plan seçenekleri).
 
-> **Windows uyarısı:** ADA kendi sertifikamızla imzalıdır, ancak bu sertifika Windows tarafından henüz tanınmadığı için ilk çalıştırmada "Windows bilgisayarınızı korudu" uyarısı çıkabilir. **Ek bilgi → Yine de çalıştır** ile devam edebilirsiniz.
+
+## Başlarken
+
+**1. Kurun.** `ADA-Setup.exe` dosyasını indirip çalıştırın. Windows **"Windows bilgisayarınızı korudu"** uyarısını gösterirse **Ek bilgi**'ye, ardından **Yine de çalıştır**'a tıklayın. Uyarının nedeni, ADA'nın Windows'un tanıdığı ücretli bir sertifika yerine kendi sertifikamızla imzalı olmasıdır. ADA açık kaynaktır; ne yaptığını koddan görebilirsiniz ve her sürüm sayfasında dosyanın SHA-256 özeti yazar.
+
+**2. Yapay zekâ anahtarı ekleyin (ücretsiz).** ADA'nın çalışması için bir yapay zekâ modeli gerekir. En hızlı ücretsiz seçenek Google Gemini:
+
+1. [aistudio.google.com/apikey](https://aistudio.google.com/apikey) adresini açıp Google hesabınızla giriş yapın.
+2. **Create API key**, ardından **Copy**'ye tıklayın.
+3. ADA'nın kurulum ekranındaki anahtar alanına yapıştırıp **Kaydet**'e basın. ADA anahtarı doğrular ve kullanılabilir modelleri listeler.
+
+<p align="center"><img src="docs/images/key-step.png" alt="Kurulumda yapay zekâ anahtarını yapıştırma" width="520"></p>
+
+Anahtar yok mu? ADA yerel modellerle de çalışır: [Ollama](https://ollama.com)'yı kurup bir model indirin, ADA kendisi bulur. Diğer sağlayıcıları (Claude, OpenAI, Groq ve diğerleri) sonradan **Ayarlar → Yapay zekâ** bölümünden ekleyebilirsiniz.
+
+**3. Bir iş verin.** İhtiyacınızı düz cümleyle yazın, örneğin:
+
+- *"Elektrikli araç şarj pazarını araştır, kaynaklı bir Word raporu yaz."*
+- *"Masaüstümdeki dosyaları türlerine göre klasörlere ayır."*
+- *"Her hafta içi 09:00'da sektörümle ilgili haberleri özetle."*
 
 ## Neler yapar?
 
@@ -23,6 +42,7 @@ ADA, bilgisayarınızda çalışan otonom bir yapay zekâ çalışanıdır: rapo
 - **Birden çok yapay zekâ:** Bu bilgisayardaki yerel modelleri (Ollama, LM Studio ve diğerleri) ve anahtarını girdiğiniz bulut modellerini (Gemini, Claude, OpenAI ve diğerleri) kullanır; işi türüne göre en uygun modele verir. Bir model sınıra takılırsa iş sıradakiyle sürer.
 - **Gözcü:** Disk, bellek, işlemci ve internet durumunu izler, sorun olursa haber verir.
 - **Kontrol sizde:** Ne zaman size soracağını siz seçersiniz; tek tuşla acil durdurma vardır.
+- **Güvenlik modu:** Bilgisayarı kapatabilecek ya da diski silebilecek komutlar güvenli modda asla çalışmaz; *onayla her şey* moduna geçerseniz ADA her seferinde size sorar.
 
 | İlk açılış soruları | ADA'nın ne kadar bağımsız çalışacağını siz seçersiniz |
 |---|---|

@@ -116,3 +116,67 @@ def test_about_has_feedback_link_and_hides_donation_until_configured(monkeypatch
     assert config.UPDATE_URL == f"github:{ada.REPO}"  # varsayılan güncelleme kaynağı yayın deposudur
     monkeypatch.setattr(config, "DONATE_URL", "https://ornek.test/bagis/{amount}")
     assert client.get("/api/about").json()["donate_url"] == "https://ornek.test/bagis/{amount}"
+
+
+def test_language_setting_api():
+    import os
+
+    from ada import config
+
+    client = TestClient(server.app)
+    origin = {"Origin": "http://testserver"}
+    env_before = config.ENV_FILE.read_text(encoding="utf-8") if config.ENV_FILE.exists() else None
+    try:
+        assert client.get("/api/status").json()["lang"] == "auto"
+        assert client.post("/api/lang", json={"lang": "xx"}, headers=origin).status_code == 400
+        assert client.post("/api/lang", json={"lang": "de"}, headers=origin).json() == {"ok": True, "lang": "de"}
+        assert client.get("/api/status").json()["lang"] == "de"  # yeniden başlatma gerekmez
+        assert not any(f["key"] == "ADA_LANG" for f in client.get("/api/settings").json()["fields"])
+    finally:
+        os.environ.pop("ADA_LANG", None)
+        if env_before is None:
+            config.ENV_FILE.unlink(missing_ok=True)
+        else:
+            config.ENV_FILE.write_text(env_before, encoding="utf-8")
+
+
+def test_every_language_has_a_complete_dictionary():
+    """Her arayüz dili için sözlük vardır, kataloğun tamamını kapsar ve yer tutucuları korur."""
+    import json
+
+    from ada import config
+
+    base = Path(ada.__file__).parent.parent / "frontend" / "public" / "assets" / "i18n"
+    catalog = json.loads((base / "catalog.json").read_text(encoding="utf-8"))
+    assert len(catalog) > 500
+    for lang in config.LANGS:
+        if lang == "tr":
+            continue
+        d = json.loads((base / f"{lang}.json").read_text(encoding="utf-8"))
+        missing = [k for k in catalog if not str(d.get(k, "")).strip()]
+        assert not missing, f"{lang}: {len(missing)} eksik, ör. {missing[:3]}"
+        for k in catalog:
+            assert sorted(re.findall(r"\{\d+\}", k)) == sorted(re.findall(r"\{\d+\}", d[k])), f"{lang}: {k!r}"
+
+
+def test_github_release_asset_names(monkeypatch):
+    """Yeni ad ADA-Setup.exe; yalnızca eski ad varsa o da kabul edilir."""
+    import asyncio
+
+    import httpx
+
+    monkeypatch.setenv("ADA_UPDATE_URL", "github:sahip/depo")
+
+    def release(names):
+        async def fake_get(self, url, **kw):
+            return httpx.Response(200, request=httpx.Request("GET", url), json={
+                "tag_name": "v9.0.0", "body": "", "assets": [
+                    {"name": n, "browser_download_url": f"https://ornek.test/{n}", "digest": "sha256:" + "ab" * 32} for n in names]})
+        return fake_get
+
+    monkeypatch.setattr("httpx.AsyncClient.get", release(["ADA-Kurulum.exe", "ADA-Setup.exe"]))
+    assert asyncio.run(updater.check())["available"] and updater._state["url"].endswith("/ADA-Setup.exe")
+    monkeypatch.setattr("httpx.AsyncClient.get", release(["ADA-Kurulum.exe"]))
+    asyncio.run(updater.check()); assert updater._state["url"].endswith("/ADA-Kurulum.exe")
+    monkeypatch.setattr("httpx.AsyncClient.get", release(["baska.zip"]))
+    assert "ADA-Setup.exe" in asyncio.run(updater.check())["error"]

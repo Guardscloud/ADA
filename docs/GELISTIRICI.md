@@ -271,3 +271,20 @@ Sonuçlar `evals/results/` altına yazılır. Her çalıştırma gerçek API ça
 Her görev, düşünme ve araç turlarıyla birden çok API çağrısı yapar; ekran kontrolü görev başına
 çok sayıda görüntü gönderir. Maliyeti azaltmak için `ADA_EFFORT=medium` veya
 `ADA_MODEL=claude-sonnet-5-5` deneyebilirsiniz.
+
+## Arayüz dilleri
+
+Bileşenler Türkçe yazılır; diğer diller sözlükle gelir (`frontend/public/assets/i18n/<dil>.json`, `{"Türkçe metin": "çeviri"}`).
+`frontend/src/i18n.js` ekrandaki metinleri ve `title`/`placeholder` gibi özellikleri DOM düzeyinde çevirir; sohbet içeriği, kod ve
+terminal çevrilmez. Sözlükte olmayan metin Türkçe kalır. Dil `ADA_LANG` ayarıdır (`auto`: sistem dili; desteklenmiyorsa İngilizce) ve
+Kontrol menüsündeki seçiciden değiştirilir. ADA'nın yanıt dili ayrıdır: kullanıcı hangi dilde yazarsa o dilde yanıt verir.
+
+Yeni metin ekledikten sonra:
+
+```powershell
+uv run python scripts/i18n_extract.py           # kataloğu yeniler (catalog.json)
+uv run python scripts/i18n_extract.py --check   # her dilde eksik çevirileri sayar
+```
+
+Eksikleri sözlük dosyalarına ekleyin; değişkenli metinlerde `{0}`, `{1}` yer tutucuları korunmalıdır. Yeni dil eklemek için
+`<dil>.json` sözlüğünü oluşturup kodu `ada/config.py` içindeki `LANGS` ve `frontend/src/i18n.js` içindeki `LANGS` listelerine ekleyin.

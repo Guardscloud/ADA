@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowUpCircle, ChevronDown, FolderOpen, HardDrive, MessageSquareHeart, OctagonX, Play, Power, Repeat, Settings, SlidersHorizontal } from "lucide-react";
 import { api } from "../api";
+import LanguageSelect from "./LanguageSelect";
 
 // Üst çubuktaki Kontrol menüsü: pencerenin eski tip menü çubuğunun (Kontrol → …) yerini alır.
 
@@ -116,6 +117,8 @@ export default function ControlMenu({ status, busy, onEmergencyStop, onResume, o
             <MessageSquareHeart size={16} />
             <span>Geri bildirim ve destek</span>
           </button>
+
+          <LanguageSelect className="ctl-lang" />
 
           <div className="ctl-foot">
             <button onClick={act(onShowSettings)}>

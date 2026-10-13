@@ -1,4 +1,5 @@
 // FastAPI arka ucuna ince bir istemci katmanı.
+import { tr } from "./i18n";
 
 export async function api(path, opts = {}) {
   const r = await fetch(path, { headers: { "Content-Type": "application/json" }, ...opts });
@@ -74,6 +75,6 @@ export async function followStream(id, onEvent, isCurrent) {
 
 export function notify(message) {
   if (!("Notification" in window)) return;
-  if (Notification.permission === "granted") new Notification("ADA", { body: message });
+  if (Notification.permission === "granted") new Notification("ADA", { body: tr(message) });
   else if (Notification.permission !== "denied") Notification.requestPermission();
 }

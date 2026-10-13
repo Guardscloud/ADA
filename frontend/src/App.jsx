@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api, followStream, notify } from "./api";
 import { speak } from "./voice";
 import { getItem, setItem } from "./storage";
+import { tr } from "./i18n";
 import Sidebar from "./components/Sidebar";
 import Thread from "./components/Thread";
 import Composer from "./components/Composer";
@@ -370,7 +371,7 @@ export default function App() {
           running={running}
           onStop={stop}
           onApprove={approve}
-          onExample={setPrefill}
+          onExample={(p) => setPrefill(tr(p))}
           status={status}
           onOpenSettings={() => setShowSettings(true)}
         />

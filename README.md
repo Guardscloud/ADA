@@ -1,53 +1,61 @@
 # ADA
 
-ADA, bilgisayarınızda çalışan otonom bir yapay zekâ çalışanıdır: rapor, analiz, sunum, e-posta, araştırma ve bilgisayardaki işleri görevi yazdığınızda baştan sona kendisi yapar.
+**English** · [Türkçe](README.tr.md)
 
-## İndir
+ADA is an autonomous AI worker that runs on your own computer. Describe a job — a report, an analysis, a presentation, an email, some research, or a chore on your PC — and ADA carries it out from start to finish.
 
-**[ADA-Kurulum.exe (son sürüm)](https://github.com/Guardscloud/ADA/releases/latest/download/ADA-Kurulum.exe)** · [tüm sürümler](https://github.com/Guardscloud/ADA/releases)
+## Download
 
-- Windows 10 / 11 (64 bit)
-- Yönetici izni gerekmez; yalnızca sizin kullanıcınız için kurulur.
-- Kurulumdan sonraki ilk açılışta birkaç kısa soru sorar (ad, yapay zekâ anahtarı, özerklik, arka plan seçenekleri).
+**[Download ADA for Windows](https://github.com/Guardscloud/ADA/releases/latest/download/ADA-Setup.exe)** · [all releases](https://github.com/Guardscloud/ADA/releases)
 
-> **Windows uyarısı:** Kurulum dosyası kendi sertifikamızla imzalıdır, ancak bu sertifika Windows tarafından henüz tanınmadığı için ilk çalıştırmada "Windows bilgisayarınızı korudu" uyarısı çıkabilir. **Ek bilgi → Yine de çalıştır** ile devam edebilirsiniz.
+- Windows 10 / 11 (64-bit)
+- No administrator rights needed; ADA installs for your user only.
+- On first launch ADA asks a few short questions (your name, an AI key, how independently it should work, what runs in the background).
 
-## Neler yapar?
+> **Windows warning:** ADA is signed with our own certificate, which Windows does not recognise yet, so the first run may show "Windows protected your PC". Choose **More info → Run anyway** to continue.
 
-- **Görevler:** Yazdığınız işi adım adım yapar; Word, Excel, PDF ve sunum dosyaları üretir.
-- **Rutinler:** Her gün kendiliğinden yapılacak işleri tanımlayabilirsiniz.
-- **Birden çok yapay zekâ:** Bu bilgisayardaki yerel modelleri ve anahtarını girdiğiniz bulut modellerini (Gemini, Claude, OpenAI ve diğerleri) kullanır; işi türüne göre en uygun modele verir.
-- **Gözcü:** Disk, bellek, işlemci ve internet durumunu izler, sorun olursa haber verir.
-- **Kontrol sizde:** Ne zaman size soracağını siz seçersiniz; tek tuşla acil durdurma vardır.
+## What it does
 
-ADA yalnızca sizin bilgisayarınızda çalışır. API anahtarlarınız ve verileriniz bilgisayarınızda kalır; yalnızca seçtiğiniz yapay zekâ sağlayıcısına görev için gereken içerik gönderilir.
+- **Tasks:** works through a job step by step and produces Word, Excel, PDF and presentation files.
+- **Routines:** jobs ADA does by itself every day, written as plain Markdown files.
+- **Many AI models:** uses local models on your machine (Ollama, LM Studio and others) and any cloud models you add a key for (Gemini, Claude, OpenAI and more), and picks the best fit for each kind of work. If one model hits a limit, the job continues with the next.
+- **Watchdog:** keeps an eye on disk, memory, CPU and internet, and tells you when something is wrong.
+- **You stay in control:** you choose when ADA must ask before acting, and there is a one-click emergency stop.
 
-## Güncellemeler
+ADA runs only on your computer. Your API keys and data stay on your machine; only the content needed for a job is sent to the AI provider you choose.
 
-ADA yeni sürümleri kendisi denetler. Yeni sürüm çıktığında bildirim gösterir; **Kontrol → Güncelle** ile tek tıkla kurulur, ayarlarınız ve verileriniz korunur.
+## Languages
 
-## Geri bildirim
+The interface is available in English, Türkçe, Deutsch, Français, Español, Português, Italiano, Русский, 中文 and 日本語. ADA follows your system language and you can change it any time from **Control → language**. ADA replies in whatever language you write to it.
 
-Bir hata bulduysanız ya da bir fikriniz varsa:
+Translations are machine-generated; corrections are welcome.
 
-- Uygulama içinden: **Kontrol → Geri bildirim ve destek**
-- Ya da doğrudan buradan: [yeni kayıt aç](https://github.com/Guardscloud/ADA/issues/new/choose)
+## Updates
 
-Her geri bildirim okunur ve ADA'nın geliştirilmesinde kullanılır.
+ADA checks for new versions by itself. When one is available it notifies you, and **Control → Update** installs it in one click. Your settings and data are kept.
 
-## Açık kaynak
+## Feedback
 
-ADA açık kaynaklıdır ([MIT lisansı](LICENSE)). Kodu inceleyebilir, değiştirebilir ve katkıda bulunabilirsiniz.
+Found a bug or have an idea?
 
-Kaynaktan çalıştırmak için [uv](https://docs.astral.sh/uv/) ve Node 18+ gerekir:
+- In the app: **Control → Feedback and support**
+- Or here: [open an issue](https://github.com/Guardscloud/ADA/issues/new/choose)
+
+Every report is read and used to improve ADA.
+
+## Open source
+
+ADA is open source under the [MIT license](LICENSE). You are welcome to read the code, change it and contribute.
+
+To run from source you need [uv](https://docs.astral.sh/uv/) and Node 18+:
 
 ```powershell
 uv sync
 cd frontend; npm install; npm run build; cd ..
-uv run pytest -q        # testler
-uv run ada-app          # masaüstü penceresi  (yalnızca tarayıcı için: uv run ada)
+uv run pytest -q        # tests
+uv run ada-app          # desktop window  (browser only: uv run ada)
 ```
 
-Mimari, ayarlar ve geliştirme notları: [docs/GELISTIRICI.md](docs/GELISTIRICI.md). Katkılar için bir kayıt açın ya da doğrudan değişiklik isteği (pull request) gönderin.
+Architecture, settings and development notes are in [docs/GELISTIRICI.md](docs/GELISTIRICI.md) (Turkish). The code comments and the interface source strings are in Turkish; other languages come from the dictionaries in `frontend/public/assets/i18n`. To contribute, open an issue or send a pull request.
 
-"ADA" adı ve Duck Team ördek logosu proje sahibine aittir; MIT lisansı kodu kapsar, adı ve logoyu kapsamaz.
+The name "ADA" and the Duck Team duck logo belong to the project owner; the MIT license covers the code, not the name or the logo.

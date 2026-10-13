@@ -168,6 +168,8 @@ RELEASES_URL = f"https://github.com/{_REPO}/releases"
 DONATE_URL = os.getenv("ADA_DONATE_URL", "")
 DONATE_AMOUNTS = (1, 2, 3, 4, 5)
 UPDATE_AUTO_CHECK = _bool("ADA_UPDATE_AUTO_CHECK", True)
+# Arayüz dilleri (sözlükler: frontend/public/assets/i18n/<dil>.json). ADA_LANG: "auto" (sistem dili) ya da bir kod.
+LANGS = ("tr", "en", "de", "fr", "es", "pt", "it", "ru", "zh", "ja")
 # Masaüstü bildirimleri (rutin bitti, onay bekleniyor, hedef durumu...)
 NOTIFICATIONS = _bool("ADA_NOTIFICATIONS", True)
 

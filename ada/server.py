@@ -199,6 +199,7 @@ async def status():
         "python": config.ENABLE_PYTHON,
         "password": bool(config.PASSWORD),
         "desktop": QUIT_HOOK is not None,
+        "lang": os.getenv("ADA_LANG", "auto"),
         "version": updater.status()["current"],
         "update": updater.status()["latest"] if updater.status()["available"] else None,
         "setup_needed": not config.SETUP_FLAG.exists(),
@@ -805,6 +806,24 @@ async def control_quit(request: Request):
 
     asyncio.create_task(later())
     return {"ok": True}
+
+
+# ---------------------------------------------------------------- arayüz dili
+
+class LangIn(BaseModel):
+    lang: str
+
+
+@app.post("/api/lang")
+async def set_lang(request: Request):
+    """Arayüz dilini kaydeder ("auto": sistem dili). Hemen geçerlidir; arayüz sayfayı yeniler."""
+    _guard(request)
+    body = await _json_body(request, LangIn)
+    try:
+        settings.update({"ADA_LANG": body.lang})
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return {"ok": True, "lang": body.lang}
 
 
 # ---------------------------------------------------------------- hakkında: geri bildirim ve bağış

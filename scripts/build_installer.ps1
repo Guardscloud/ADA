@@ -1,4 +1,4 @@
-# ADA-Kurulum.exe üretir (Windows kurulum programı). Çıktı: dist\ADA-Kurulum.exe
+# ADA-Setup.exe üretir (Windows kurulum programı). Çıktı: dist\ADA-Setup.exe
 # Gereksinim: Inno Setup 6 (winget install -e --id JRSoftware.InnoSetup --scope user)
 # Kullanım: cmd /c powershell -File scripts\build_installer.ps1            (uygulamayı da yeniden paketler)
 #           cmd /c powershell -File scripts\build_installer.ps1 -SkipApp   (var olan dist\ADA ile)
@@ -36,4 +36,4 @@ if ($hasCert) {
 & $iscc @isccArgs "scripts\installer.iss"
 if ($LASTEXITCODE -ne 0) { throw "Inno Setup derlemesi başarısız (kod $LASTEXITCODE)" }
 
-Write-Host ("Hazır: dist\ADA-Kurulum.exe" + $(if ($hasCert) { " (imzalı)" } else { "" }))
+Write-Host ("Hazır: dist\ADA-Setup.exe" + $(if ($hasCert) { " (imzalı)" } else { "" }))

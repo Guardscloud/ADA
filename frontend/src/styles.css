@@ -739,3 +739,11 @@ a.setup-btn.disabled { opacity: .55; pointer-events: none; }
 .support-amounts { display: flex; gap: 8px; }
 .support-amounts a { flex: 1; text-align: center; padding: 10px 0; border-radius: 12px; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); font-weight: 700; font-size: 15px; text-decoration: none; font-variant-numeric: tabular-nums; transition: .15s; }
 .support-amounts a:hover { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-ink); transform: translateY(-1px); }
+
+/* dil seçici */
+.lang-select { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 13px; }
+.lang-select select { flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 9px; padding: 6px 8px; background: var(--panel-2); color: var(--ink); font: inherit; font-size: 13px; }
+.lang-select select:focus { outline: 0; border-color: var(--accent); }
+.ctl-lang { padding: 0 2px; }
+.setup-lang { align-self: flex-end; margin: 14px 26px -6px; }
+.setup-lang select { flex: none; }

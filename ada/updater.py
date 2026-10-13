@@ -1,8 +1,8 @@
 """Uygulama içi güncelleme: yeni sürüm var mı diye bakar, kurulum programını indirir, doğrular ve çalıştırır.
 
 Kaynak (ADA_UPDATE_URL):
-  - "github:sahip/depo"  → o deponun en son GitHub Release'i; "ADA-Kurulum.exe" adlı ek dosya indirilir
-  - "https://…/latest.json" → {"version": "0.2.0", "url": "ADA-Kurulum.exe", "sha256": "…", "notes": "…"}
+  - "github:sahip/depo"  → o deponun en son GitHub Release'i; "ADA-Setup.exe" adlı ek dosya indirilir
+  - "https://…/latest.json" → {"version": "0.2.0", "url": "ADA-Setup.exe", "sha256": "…", "notes": "…"}
     (`url` göreli olabilir; scripts\\publish_update.ps1 bu dosyayı üretir)
 
 Güvenlik: adres https olmalıdır (yalnızca 127.0.0.1 için http kabul edilir). İndirilen dosyanın SHA-256 özeti
@@ -27,7 +27,8 @@ import httpx
 
 from . import __version__, config
 
-ASSET_NAME = "ADA-Kurulum.exe"
+# Yayındaki kurulum dosyası; eski sürümler "ADA-Kurulum.exe" adını arar, ikisi de yayımlanır
+ASSET_NAMES = ("ADA-Setup.exe", "ADA-Kurulum.exe")
 UPDATES_DIR = config.HOME_DIR / "updates"
 CHECK_HOURS = 6
 MAX_BYTES = 600 * 1024 * 1024
@@ -111,9 +112,10 @@ async def _fetch(client: httpx.AsyncClient) -> dict:
             raise UpdateError("Bu depoda yayımlanmış sürüm bulunamadı.")
         r.raise_for_status()
         data = r.json()
-        asset = next((a for a in data.get("assets", []) if a.get("name") == ASSET_NAME), None)
+        assets = {a.get("name"): a for a in data.get("assets", [])}
+        asset = next((assets[n] for n in ASSET_NAMES if n in assets), None)
         if asset is None:
-            raise UpdateError(f"Son sürümde {ASSET_NAME} dosyası yok.")
+            raise UpdateError(f"Son sürümde {ASSET_NAMES[0]} dosyası yok.")
         digest = str(asset.get("digest") or "")
         return {"version": str(data.get("tag_name", "")), "url": asset["browser_download_url"],
                 "sha256": digest.removeprefix("sha256:") if digest.startswith("sha256:") else "",
@@ -218,7 +220,7 @@ async def _run_install(on_ready) -> None:
     try:
         for old in UPDATES_DIR.glob("*") if UPDATES_DIR.exists() else []:
             old.unlink(missing_ok=True)
-        dest = UPDATES_DIR / f"ADA-Kurulum-{re.sub(r'[^0-9A-Za-z.]', '_', version)}.exe"
+        dest = UPDATES_DIR / f"ADA-Setup-{re.sub(r'[^0-9A-Za-z.]', '_', version)}.exe"
         _set(phase="downloading", progress=0, error="")
         await _download(_check_url(url), dest)
         _set(phase="verifying", progress=100)

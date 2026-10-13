@@ -48,6 +48,7 @@ FIELDS: dict[str, tuple[str, str, list[str] | None, bool, str]] = {
     "ADA_DAILY_EMAIL_LIMIT": ("Günlük e-posta gönderim sınırı (0: sınırsız)", "number", None, False, "20"),
     "ADA_UPDATE_URL": ("Güncelleme adresi (github:sahip/depo ya da https://…/latest.json)", "text", None, False, config.UPDATE_URL),
     "ADA_UPDATE_AUTO_CHECK": ("Yeni sürümü kendiliğinden denetle", "bool", None, False, "true"),
+    "ADA_LANG": ("Arayüz dili", "select", ["auto", *config.LANGS], False, "auto"),
     "ADA_PASSWORD": ("Arayüz parolası (boş: parola yok)", "text", None, True, ""),
 }
 
@@ -77,6 +78,8 @@ def current() -> list[dict]:
     for key, (label, kind, options, secret, default) in FIELDS.items():
         if not config.QWEN_ENABLED and (key.startswith("ADA_QWEN_") or key == "DASHSCOPE_API_KEY"):
             continue  # Qwen şimdilik pasif: ayarları gösterilmez
+        if key == "ADA_LANG":
+            continue  # dil, Kontrol menüsündeki seçiciden değiştirilir (yeniden başlatma gerekmez)
         value = os.getenv(key, "")
         out.append({
             "key": key,

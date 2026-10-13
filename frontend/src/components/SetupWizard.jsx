@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Hand, KeyRound, Monitor, Power, Shield, ShieldCheck, Zap } from "lucide-react";
 import duckImg from "../assets/duck-192.png";
 import { api } from "../api";
+import LanguageSelect from "./LanguageSelect";
 
 // Kurulumdan sonraki ilk açılışta gerekli soruları sorar: ad, yapay zekâ anahtarı, özerklik, arka plan.
 
@@ -107,6 +108,7 @@ export default function SetupWizard({ onDone }) {
   return (
     <div className="setup-bg">
       <div className="setup-card">
+        <LanguageSelect className="setup-lang" />
         <div className="setup-steps">
           {STEPS.map((s, i) => (
             <div key={s} className={"setup-step" + (i === step ? " on" : i < step ? " done" : "")}>

@@ -4,6 +4,8 @@
 
 ADA is an autonomous AI worker that runs on your own computer. Describe a job — a report, an analysis, a presentation, an email, some research, or a chore on your PC — and ADA carries it out from start to finish.
 
+<p align="center"><img src="docs/images/main.png" alt="ADA main screen" width="900"></p>
+
 ## Download
 
 **[Download ADA for Windows](https://github.com/Guardscloud/ADA/releases/latest/download/ADA-Setup.exe)** · [all releases](https://github.com/Guardscloud/ADA/releases)
@@ -22,11 +24,27 @@ ADA is an autonomous AI worker that runs on your own computer. Describe a job �
 - **Watchdog:** keeps an eye on disk, memory, CPU and internet, and tells you when something is wrong.
 - **You stay in control:** you choose when ADA must ask before acting, and there is a one-click emergency stop.
 
+| First-run setup | You decide how independent ADA is |
+|---|---|
+| <img src="docs/images/setup.png" alt="First-run setup" width="440"> | <img src="docs/images/autonomy.png" alt="Autonomy levels" width="440"> |
+
+| Control menu | Feedback from inside the app |
+|---|---|
+| <img src="docs/images/control.png" alt="Control menu with emergency stop" width="380"> | <img src="docs/images/feedback.png" alt="Feedback panel" width="440"> |
+
 ADA runs only on your computer. Your API keys and data stay on your machine; only the content needed for a job is sent to the AI provider you choose.
 
 ## Languages
 
 The interface is available in English, Türkçe, Deutsch, Français, Español, Português, Italiano, Русский, 中文 and 日本語. ADA follows your system language and you can change it any time from **Control → language**. ADA replies in whatever language you write to it.
+
+You can also write your tasks and routine files in any language: ADA understands the request in the language it is written in and produces its reports and documents in that language.
+
+<p align="center">
+  <img src="docs/images/lang-ja.png" alt="ADA in Japanese" width="290">
+  <img src="docs/images/lang-de.png" alt="ADA in German" width="290">
+  <img src="docs/images/lang-es.png" alt="ADA in Spanish" width="290">
+</p>
 
 Translations are machine-generated; corrections are welcome.
 

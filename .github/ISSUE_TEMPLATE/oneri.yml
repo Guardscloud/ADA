@@ -1,0 +1,11 @@
+name: Öneri
+description: Yeni özellik ya da iyileştirme fikri
+title: "[öneri] "
+labels: ["öneri"]
+body:
+  - type: textarea
+    attributes:
+      label: Ne olsun isterdiniz?
+      description: ADA'da ne olsun isterdiniz? Hangi işinizi kolaylaştırırdı?
+    validations:
+      required: true

@@ -1,0 +1,19 @@
+name: Hata bildir
+description: Bir şey çalışmıyor ya da yanlış çalışıyor
+title: "[hata] "
+labels: ["hata"]
+body:
+  - type: textarea
+    attributes:
+      label: Ne oldu?
+      description: Ne yaptınız, ne olmasını bekliyordunuz, ne oldu?
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: ADA sürümü
+      description: Kontrol menüsünde "Güncellemeleri denetle" satırının sağında yazar (ör. v0.2.0)
+  - type: input
+    attributes:
+      label: Windows sürümü
+      placeholder: Windows 11

@@ -927,5 +927,6 @@
 "🛡 Gözcü kontrol listesini denetliyor": "🛡 Wächter lässt die Kontrollliste prüfen",
 "🛡 Gözcü kontrolü · {0}": "🛡 Wächterkontrolle · {0}",
 "🛡 Gözcü sorunu inceliyor: {0}": "🛡 Wächter untersucht das Problem: {0}",
-"🛡 Gözcü: {0}": "🛡 Wächter: {0}"
+"🛡 Gözcü: {0}": "🛡 Wächter: {0}",
+"Sürüm {0} kurulamadı: ADA'dan açılmış başka bir program ADA'nın dosyalarını kullanıyordu. O programı kapatıp (ya da Windows'u yeniden başlatıp) tekrar deneyin.": "Version {0} konnte nicht installiert werden: Ein von ADA gestartetes Programm verwendete die Dateien von ADA. Schließen Sie dieses Programm (oder starten Sie Windows neu) und versuchen Sie es erneut."
 }

@@ -788,7 +788,7 @@
 "sure": "sure",
 "sure: 30": "sure: 30",
 "tamamlandı": "abgeschlossen",
-"tek görev 20 dakika sınırlıdır; \"devam et\" yazın veya isteği daraltın.": "eine einzelne Aufgabe ist auf 20 Minuten begrenzt; schreiben Sie „weiter“ oder grenzen Sie die Anfrage ein.",
+"ADA uzun görevleri 20 dakikalık bölümler halinde kendiliğinden sürdürür; yalnızca ilerleme olmazsa durur. O zaman isteği daraltın.": "ADA setzt lange Aufgaben automatisch in 20-Minuten-Abschnitten fort und hält nur an, wenn kein Fortschritt erzielt wird. Grenzen Sie dann die Anfrage ein.",
 "ulaşılamıyor": "nicht erreichbar",
 "uygun motor yok": "keine passende Engine",
 "veya": "oder",
@@ -927,5 +927,6 @@
 "🛡 Gözcü kontrol listesini denetliyor": "🛡 Wächter lässt die Kontrollliste prüfen",
 "🛡 Gözcü kontrolü · {0}": "🛡 Wächterkontrolle · {0}",
 "🛡 Gözcü sorunu inceliyor: {0}": "🛡 Wächter untersucht das Problem: {0}",
-"🛡 Gözcü: {0}": "🛡 Wächter: {0}"
+"🛡 Gözcü: {0}": "🛡 Wächter: {0}",
+"Sürüm {0} kurulamadı: ADA'dan açılmış başka bir program ADA'nın dosyalarını kullanıyordu. O programı kapatıp (ya da Windows'u yeniden başlatıp) tekrar deneyin.": "Version {0} konnte nicht installiert werden: Ein von ADA gestartetes Programm verwendete die Dateien von ADA. Schließen Sie dieses Programm (oder starten Sie Windows neu) und versuchen Sie es erneut."
 }

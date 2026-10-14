@@ -788,7 +788,7 @@
 "sure": "sure",
 "sure: 30": "sure: 30",
 "tamamlandı": "已完成",
-"tek görev 20 dakika sınırlıdır; \"devam et\" yazın veya isteği daraltın.": "单个任务最长运行 20 分钟；请输入“继续”，或缩小请求范围。",
+"ADA uzun görevleri 20 dakikalık bölümler halinde kendiliğinden sürdürür; yalnızca ilerleme olmazsa durur. O zaman isteği daraltın.": "ADA 会以 20 分钟为一段自动继续长任务，仅在没有进展时停止。此时请缩小请求范围。",
 "ulaşılamıyor": "无法访问",
 "uygun motor yok": "没有合适的模型",
 "veya": "或",
@@ -927,5 +927,6 @@
 "🛡 Gözcü kontrol listesini denetliyor": "🛡 守护正在检查检查清单",
 "🛡 Gözcü kontrolü · {0}": "🛡 守护检查 · {0}",
 "🛡 Gözcü sorunu inceliyor: {0}": "🛡 守护正在排查问题：{0}",
-"🛡 Gözcü: {0}": "🛡 守护：{0}"
+"🛡 Gözcü: {0}": "🛡 守护：{0}",
+"Sürüm {0} kurulamadı: ADA'dan açılmış başka bir program ADA'nın dosyalarını kullanıyordu. O programı kapatıp (ya da Windows'u yeniden başlatıp) tekrar deneyin.": "无法安装版本 {0}：从 ADA 启动的另一个程序正在使用 ADA 的文件。请关闭该程序（或重启 Windows）后重试。"
 }

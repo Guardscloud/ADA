@@ -788,7 +788,7 @@
 "sure": "sure",
 "sure: 30": "sure: 30",
 "tamamlandı": "completado",
-"tek görev 20 dakika sınırlıdır; \"devam et\" yazın veya isteği daraltın.": "una sola tarea está limitada a 20 minutos; escriba \"continuar\" o acote la solicitud.",
+"ADA uzun görevleri 20 dakikalık bölümler halinde kendiliğinden sürdürür; yalnızca ilerleme olmazsa durur. O zaman isteği daraltın.": "ADA continúa automáticamente las tareas largas en tramos de 20 minutos y solo se detiene si no hay avances. En ese caso, acote la solicitud.",
 "ulaşılamıyor": "inaccesible",
 "uygun motor yok": "no hay motor adecuado",
 "veya": "o",
@@ -927,5 +927,6 @@
 "🛡 Gözcü kontrol listesini denetliyor": "🛡 El Vigilante está revisando la lista de control",
 "🛡 Gözcü kontrolü · {0}": "🛡 Comprobación del Vigilante · {0}",
 "🛡 Gözcü sorunu inceliyor: {0}": "🛡 El Vigilante investiga el problema: {0}",
-"🛡 Gözcü: {0}": "🛡 Vigilante: {0}"
+"🛡 Gözcü: {0}": "🛡 Vigilante: {0}",
+"Sürüm {0} kurulamadı: ADA'dan açılmış başka bir program ADA'nın dosyalarını kullanıyordu. O programı kapatıp (ya da Windows'u yeniden başlatıp) tekrar deneyin.": "No se pudo instalar la versión {0}: otro programa abierto desde ADA estaba usando los archivos de ADA. Cierre ese programa (o reinicie Windows) e inténtelo de nuevo."
 }

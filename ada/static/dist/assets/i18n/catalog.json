@@ -739,7 +739,7 @@
 "Taranıyor…",
 "Tehlikeli komut: bilgisayarı kapatabilir ya da verileri kalıcı olarak silebilir",
 "Tek anahtarla birçok aile",
-"tek görev 20 dakika sınırlıdır; \"devam et\" yazın veya isteği daraltın.",
+"ADA uzun görevleri 20 dakikalık bölümler halinde kendiliğinden sürdürür; yalnızca ilerleme olmazsa durur. O zaman isteği daraltın.",
 "Tek satırlık bir komut gerekli.",
 "Tek seferde bitmeyecek işler için. \"Rakip analizi projesini üstlen\" deyin veya kenar çubuğunda",
 "Tek çalışmanın en uzun süresi, dakika cinsinden:",
@@ -926,5 +926,6 @@
 "🛡 Gözcü kontrol listesini denetliyor",
 "🛡 Gözcü kontrolü · {0}",
 "🛡 Gözcü sorunu inceliyor: {0}",
-"🛡 Gözcü: {0}"
+"🛡 Gözcü: {0}",
+"Sürüm {0} kurulamadı: ADA'dan açılmış başka bir program ADA'nın dosyalarını kullanıyordu. O programı kapatıp (ya da Windows'u yeniden başlatıp) tekrar deneyin."
 ]

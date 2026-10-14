@@ -95,6 +95,68 @@ def test_verify_requires_same_signer(tmp_path, monkeypatch):
         updater.verify(f, "", own_exe="own")
 
 
+def test_failed_install_is_reported_after_restart(tmp_path, monkeypatch):
+    """Kurulum durup ADA eski sürümle yeniden açılırsa kullanıcı nedenini görür; başarılıysa sessiz kalır."""
+    pending = tmp_path / "pending.txt"
+    monkeypatch.setattr(updater, "PENDING_FILE", pending)
+    pending.write_text("99.0.0", encoding="utf-8")
+    monkeypatch.setattr(updater, "_pending_checked", False)
+    s = updater.status()
+    assert s["phase"] == "error" and "99.0.0 kurulamadı" in s["error"] and not pending.exists()
+
+    updater._set(phase="idle", error="")
+    pending.write_text(ada.__version__, encoding="utf-8")  # kurulum bitti: çalışan sürüm istenen sürüm
+    monkeypatch.setattr(updater, "_pending_checked", False)
+    assert updater.status()["phase"] == "idle" and not pending.exists()
+
+
+def test_frozen_app_does_not_pass_its_dll_dir_to_children(monkeypatch):
+    """Paketli uygulamada (Windows) ADA'nın açtığı programlar DLL'leri ADA'nın klasöründen yüklememeli."""
+    from ada import desktop
+
+    calls = []
+    monkeypatch.setattr(desktop.sys, "frozen", True, raising=False)
+    monkeypatch.setattr(desktop.sys, "_MEIPASS", "C:/ada/_internal", raising=False)
+    monkeypatch.setattr(desktop.sys, "platform", "win32")
+    monkeypatch.setattr(desktop.os, "add_dll_directory", lambda p: calls.append(("add", p)) or "tutamaç", raising=False)
+    import ctypes
+
+    fake_k32 = type("K", (), {"SetDllDirectoryW": staticmethod(lambda v: calls.append(("set", v)))})
+    monkeypatch.setattr(ctypes, "windll", type("W", (), {"kernel32": fake_k32})(), raising=False)
+    desktop._keep_dll_dir_private()
+    assert calls == [("add", "C:/ada/_internal"), ("set", None)]
+
+
+@pytest.mark.skipif(not __import__("sys").platform.startswith("win"), reason="adlandırılmış mutex yalnızca Windows'ta")
+def test_only_one_ada_per_data_folder(tmp_path, monkeypatch):
+    """Aynı veri klasörüyle ikinci ADA açılmaz; eski kopya kapanınca (yeniden başlatma) yenisi açılabilir."""
+    import ctypes
+    import subprocess
+    import sys
+
+    from ada import desktop
+
+    monkeypatch.setenv("ADA_HOME", str(tmp_path))
+    monkeypatch.setattr(desktop, "_INSTANCE_MUTEX", None)
+    holder = subprocess.Popen([sys.executable, "-c", "import sys, time; sys.path.insert(0, sys.argv[1]); from ada import desktop; "
+                               "print(desktop._claim_single_instance(), flush=True); time.sleep(30)",
+                               str(Path(ada.__file__).parent.parent)], stdout=subprocess.PIPE, text=True,
+                              env={**__import__("os").environ, "ADA_HOME": str(tmp_path)})
+    try:
+        assert holder.stdout.readline().strip() == "True"  # ilk kopya kilidi aldı
+        assert desktop._claim_single_instance() is False  # ikinci kopya açılmaz
+        holder.kill()
+        holder.wait()
+        assert desktop._claim_single_instance(wait=5) is True  # eski kopya kapandı: yeniden başlatma açılır
+    finally:
+        holder.kill()
+        if desktop._INSTANCE_MUTEX:
+            ctypes.windll.kernel32.CloseHandle(ctypes.c_void_p(desktop._INSTANCE_MUTEX))
+    monkeypatch.setenv("ADA_HOME", str(tmp_path / "baska"))
+    monkeypatch.setattr(desktop, "_INSTANCE_MUTEX", None)
+    assert desktop._claim_single_instance() is True  # başka veri klasörü başka kilit
+
+
 def test_update_api():
     client = TestClient(server.app)
     origin = {"Origin": "http://testserver"}

@@ -73,7 +73,27 @@ def can_install() -> bool:
     return config.FROZEN and config.IS_WIN
 
 
+PENDING_FILE = UPDATES_DIR / "pending.txt"  # kurulumu başlatılan sürüm; açılışta hâlâ eskiyse kurulum durmuştur
+_pending_checked = False
+
+
+def _check_pending() -> None:
+    global _pending_checked
+    if _pending_checked:
+        return
+    _pending_checked = True
+    try:
+        wanted = PENDING_FILE.read_text(encoding="utf-8").strip()
+        PENDING_FILE.unlink(missing_ok=True)
+    except OSError:
+        return
+    if wanted and is_newer(wanted):
+        _set(phase="error", error=(f"Sürüm {wanted} kurulamadı: ADA'dan açılmış başka bir program ADA'nın dosyalarını "
+                                   "kullanıyordu. O programı kapatıp (ya da Windows'u yeniden başlatıp) tekrar deneyin."))
+
+
 def status() -> dict:
+    _check_pending()
     with _lock:
         s = dict(_state)
     return {
@@ -226,6 +246,7 @@ async def _run_install(on_ready) -> None:
         _set(phase="verifying", progress=100)
         await asyncio.to_thread(verify, dest, sha)
         _set(phase="installing")
+        PENDING_FILE.write_text(version, encoding="utf-8")
         await asyncio.to_thread(launch_installer, dest)
         await asyncio.sleep(1.0)  # arayüz "kuruluyor" durumunu görsün
         on_ready()
@@ -251,6 +272,14 @@ def start_install(on_ready) -> None:
 
 async def loop() -> None:
     """Açılıştan kısa süre sonra ve ardından düzenli aralıklarla yeni sürüm var mı diye bakar."""
+    _check_pending()
+    if _state["phase"] == "error":
+        try:
+            from .notify import notify
+
+            notify("ADA güncellenemedi", _state["error"])
+        except Exception:  # noqa: BLE001 - bildirim gösterilemezse de hata Güncelleme panelinde görünür
+            pass
     if not config.UPDATE_AUTO_CHECK or os.getenv("ADA_NO_DISCOVERY"):
         return
     await asyncio.sleep(45)

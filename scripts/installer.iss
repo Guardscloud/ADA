@@ -68,6 +68,8 @@ Name: "uk"; MessagesFile: "compiler:Languages\Ukrainian.isl"
 DesktopIcon=Create a desktop shortcut
 Shortcuts=Shortcuts:
 LaunchNow=Launch ADA now
+InUse=ADA could not be updated: another program that was started from ADA is still using ADA's files.%n%nClose that program (or restart Windows) and try again. ADA was not changed.
+tr.InUse=ADA güncellenemedi: ADA'dan açılmış başka bir program hâlâ ADA'nın dosyalarını kullanıyor.%n%nO programı kapatıp (ya da Windows'u yeniden başlatıp) tekrar deneyin. ADA'da hiçbir şey değişmedi.
 RemoveData=Also delete your ADA data?%n%nSettings, API keys, task history, routines and outputs:%n%1%n%nIf you choose "No", your data stays; reinstalling ADA picks up where you left off.
 tr.DesktopIcon=Masaüstüne kısayol oluştur
 tr.Shortcuts=Kısayollar:
@@ -104,9 +106,10 @@ Name: "desktopicon"; Description: "{cm:DesktopIcon}"; GroupDescription: "{cm:Sho
 [Files]
 Source: "..\dist\ADA\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
-[InstallDelete]
-; Güncellemede önceki sürümün artık dosyaları kalmasın
-Type: filesandordirs; Name: "{app}\_internal"
+; Önceki sürümün _internal klasörü silinmez, kurulumdan önce kenara alınır (PrepareToInstall): içinde başka bir
+; programın kilitlediği dosya varsa kurulum hiçbir şeye dokunmadan durur, ADA yarım kalmaz.
+[UninstallDelete]
+Type: filesandordirs; Name: "{app}\_internal.old*"
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\ADA.exe"
@@ -145,10 +148,87 @@ begin
   Result := ExpandConstant('{param:RELAUNCH|0}') = '1';
 end;
 
+{ Önceki kurulumların kenara alınmış klasörlerini siler; hâlâ kilitli olan kalır, sonraki kurulumda yeniden denenir }
+procedure CleanOldInternals;
+var
+  FindRec: TFindRec;
+begin
+  if FindFirst(ExpandConstant('{app}\_internal.old*'), FindRec) then
+  try
+    repeat
+      DelTree(ExpandConstant('{app}\') + FindRec.Name, True, True, True);
+    until not FindNext(FindRec);
+  finally
+    FindClose(FindRec);
+  end;
+end;
+
+var
+  Aside: String;
+  Installed: Boolean;
+
 function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  Internal: String;
+  I, ResultCode: Integer;
 begin
   StopAda;
   Result := '';
+  Internal := ExpandConstant('{app}\_internal');
+  if not DirExists(Internal) then
+    Exit;
+  CleanOldInternals;
+  Aside := '';
+  for I := 1 to 20 do
+    if not DirExists(Internal + '.old' + IntToStr(I)) then
+    begin
+      Aside := Internal + '.old' + IntToStr(I);
+      Break;
+    end;
+  { Kilitli bir dosya varsa klasörün adı değiştirilemez: ADA'nın kapanmasını biraz bekleyip yeniden denenir }
+  for I := 1 to 10 do
+  begin
+    if (Aside <> '') and RenameFile(Internal, Aside) then
+    begin
+      FileCopy(ExpandConstant('{app}\ADA.exe'), Aside + '\ADA.exe.onceki', False);
+      Exit;
+    end;
+    Sleep(500);
+  end;
+  Aside := '';
+  Log('_internal kenara alınamadı (dosyalar kullanımda); kurulum değişiklik yapmadan durdu.');
+  Result := CustomMessage('InUse');
+  if RelaunchRequested then
+    Exec(ExpandConstant('{app}\ADA.exe'), '', '', SW_SHOWNORMAL, ewNoWait, ResultCode);
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep = ssPostInstall then
+  begin
+    Installed := True;
+    CleanOldInternals;
+  end;
+end;
+
+procedure DeinitializeSetup;
+var
+  Internal: String;
+begin
+  { Kopyalama yarıda kaldıysa (geri alındıysa) önceki sürüm yerine konur: ADA eski hâliyle açılır }
+  if (Aside <> '') and not Installed and DirExists(Aside) then
+  begin
+    Internal := ExpandConstant('{app}\_internal');  // uygulama klasörü yalnızca kurulum başladıysa bilinir
+    if DirExists(Internal) then
+      DelTree(Internal, True, True, True);
+    if FileExists(Aside + '\ADA.exe.onceki') then
+      FileCopy(Aside + '\ADA.exe.onceki', ExpandConstant('{app}\ADA.exe'), False);
+    if RenameFile(Aside, Internal) then
+    begin
+      DeleteFile(Internal + '\ADA.exe.onceki');
+      Log('Kurulum tamamlanamadı; önceki sürüm geri kondu.');
+    end;
+  end;
 end;
 
 function InitializeUninstall(): Boolean;

@@ -927,5 +927,6 @@
 "🛡 Gözcü kontrol listesini denetliyor": "🛡 Страж проверяет список проверки",
 "🛡 Gözcü kontrolü · {0}": "🛡 Проверка Стража · {0}",
 "🛡 Gözcü sorunu inceliyor: {0}": "🛡 Страж изучает проблему: {0}",
-"🛡 Gözcü: {0}": "🛡 Страж: {0}"
+"🛡 Gözcü: {0}": "🛡 Страж: {0}",
+"Sürüm {0} kurulamadı: ADA'dan açılmış başka bir program ADA'nın dosyalarını kullanıyordu. O programı kapatıp (ya da Windows'u yeniden başlatıp) tekrar deneyin.": "Не удалось установить версию {0}: другая программа, запущенная из ADA, использовала файлы ADA. Закройте эту программу (или перезагрузите Windows) и попробуйте снова."
 }

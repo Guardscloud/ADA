@@ -788,7 +788,7 @@
 "sure": "sure",
 "sure: 30": "sure: 30",
 "tamamlandı": "完了",
-"tek görev 20 dakika sınırlıdır; \"devam et\" yazın veya isteği daraltın.": "1 つのタスクは 20 分に制限されています。「再開」と入力するか、依頼を絞り込んでください。",
+"ADA uzun görevleri 20 dakikalık bölümler halinde kendiliğinden sürdürür; yalnızca ilerleme olmazsa durur. O zaman isteği daraltın.": "ADA は長いタスクを 20 分ごとに自動で続行し、進捗がない場合にのみ停止します。その場合は依頼を絞り込んでください。",
 "ulaşılamıyor": "到達できません",
 "uygun motor yok": "適切なモデルがありません",
 "veya": "または",
@@ -927,5 +927,6 @@
 "🛡 Gözcü kontrol listesini denetliyor": "🛡 ウォッチドッグがチェックリストを確認中",
 "🛡 Gözcü kontrolü · {0}": "🛡 ウォッチドッグのチェック · {0}",
 "🛡 Gözcü sorunu inceliyor: {0}": "🛡 ウォッチドッグが問題を調査中：{0}",
-"🛡 Gözcü: {0}": "🛡 ウォッチドッグ：{0}"
+"🛡 Gözcü: {0}": "🛡 ウォッチドッグ：{0}",
+"Sürüm {0} kurulamadı: ADA'dan açılmış başka bir program ADA'nın dosyalarını kullanıyordu. O programı kapatıp (ya da Windows'u yeniden başlatıp) tekrar deneyin.": "バージョン {0} をインストールできませんでした。ADA から起動した別のプログラムが ADA のファイルを使用していました。そのプログラムを閉じる（または Windows を再起動する）と、もう一度お試しください。"
 }

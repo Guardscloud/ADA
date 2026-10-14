@@ -927,5 +927,6 @@
 "🛡 Gözcü kontrol listesini denetliyor": "🛡 La Sentinelle fait vérifier la liste de contrôle",
 "🛡 Gözcü kontrolü · {0}": "🛡 Contrôle de la Sentinelle · {0}",
 "🛡 Gözcü sorunu inceliyor: {0}": "🛡 La Sentinelle examine le problème : {0}",
-"🛡 Gözcü: {0}": "🛡 Sentinelle : {0}"
+"🛡 Gözcü: {0}": "🛡 Sentinelle : {0}",
+"Sürüm {0} kurulamadı: ADA'dan açılmış başka bir program ADA'nın dosyalarını kullanıyordu. O programı kapatıp (ya da Windows'u yeniden başlatıp) tekrar deneyin.": "La version {0} n'a pas pu être installée : un programme lancé depuis ADA utilisait les fichiers d'ADA. Fermez ce programme (ou redémarrez Windows) et réessayez."
 }

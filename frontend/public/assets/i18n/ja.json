@@ -927,5 +927,6 @@
 "🛡 Gözcü kontrol listesini denetliyor": "🛡 ウォッチドッグがチェックリストを確認中",
 "🛡 Gözcü kontrolü · {0}": "🛡 ウォッチドッグのチェック · {0}",
 "🛡 Gözcü sorunu inceliyor: {0}": "🛡 ウォッチドッグが問題を調査中：{0}",
-"🛡 Gözcü: {0}": "🛡 ウォッチドッグ：{0}"
+"🛡 Gözcü: {0}": "🛡 ウォッチドッグ：{0}",
+"Sürüm {0} kurulamadı: ADA'dan açılmış başka bir program ADA'nın dosyalarını kullanıyordu. O programı kapatıp (ya da Windows'u yeniden başlatıp) tekrar deneyin.": "バージョン {0} をインストールできませんでした。ADA から起動した別のプログラムが ADA のファイルを使用していました。そのプログラムを閉じる（または Windows を再起動する）と、もう一度お試しください。"
 }

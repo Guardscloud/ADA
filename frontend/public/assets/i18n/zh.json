@@ -927,5 +927,6 @@
 "🛡 Gözcü kontrol listesini denetliyor": "🛡 守护正在检查检查清单",
 "🛡 Gözcü kontrolü · {0}": "🛡 守护检查 · {0}",
 "🛡 Gözcü sorunu inceliyor: {0}": "🛡 守护正在排查问题：{0}",
-"🛡 Gözcü: {0}": "🛡 守护：{0}"
+"🛡 Gözcü: {0}": "🛡 守护：{0}",
+"Sürüm {0} kurulamadı: ADA'dan açılmış başka bir program ADA'nın dosyalarını kullanıyordu. O programı kapatıp (ya da Windows'u yeniden başlatıp) tekrar deneyin.": "无法安装版本 {0}：从 ADA 启动的另一个程序正在使用 ADA 的文件。请关闭该程序（或重启 Windows）后重试。"
 }

@@ -20,6 +20,64 @@ import time
 import urllib.request
 
 
+_DLL_DIR_HANDLE = None
+
+
+def _keep_dll_dir_private() -> None:
+    """PyInstaller'ın başlatıcısı SetDllDirectoryW(_internal) çağırır ve bu ayar alt süreçlere miras geçer: ADA'nın
+    açtığı programlar (ör. bir VPN uygulaması) DLL'leri ADA'nın klasöründen yükleyip kilitler, güncelleme de o
+    dosyaları değiştiremez. Klasör ADA'nın kendi modülleri için AddDllDirectory ile tutulur, alt süreçler için silinir."""
+    global _DLL_DIR_HANDLE
+    if not (getattr(sys, "frozen", False) and sys.platform == "win32"):
+        return
+    import ctypes
+
+    try:
+        _DLL_DIR_HANDLE = os.add_dll_directory(sys._MEIPASS)  # tutamaç kapanınca klasör listeden çıkar
+        ctypes.windll.kernel32.SetDllDirectoryW(None)
+    except (OSError, AttributeError):
+        pass
+
+
+_INSTANCE_MUTEX = None
+
+
+def _claim_single_instance(wait: float = 0) -> bool:
+    """Windows: aynı veri klasörünü kullanan yalnızca bir ADA süreci çalışır (adlandırılmış mutex). Port denetiminden
+    farklı olarak ilk kopyanın sunucusu henüz açılmamışken ya da başka portla başlatılmışken de geçerlidir;
+    süreç kapanınca kilit kendiliğinden kalkar. `wait`: kilidin boşalması için en fazla bu kadar saniye beklenir."""
+    global _INSTANCE_MUTEX
+    if sys.platform != "win32":
+        return True
+    import ctypes
+    import hashlib
+    from pathlib import Path
+
+    # config burada içe aktarılmaz: ADA_PORT'u içe aktarıldığı anda okur (bkz. config._app_home)
+    if os.getenv("ADA_HOME"):
+        home = Path(os.environ["ADA_HOME"]).expanduser()
+    elif getattr(sys, "frozen", False):
+        home = Path(os.getenv("APPDATA", Path.home())) / "ADA"
+    else:
+        home = Path(__file__).resolve().parent.parent
+    name = "Local\\ADA-" + hashlib.sha1(str(home.resolve()).lower().encode()).hexdigest()[:16]
+    k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    k32.CreateMutexW.restype = ctypes.c_void_p
+    k32.CloseHandle.argtypes = [ctypes.c_void_p]
+    end = time.time() + wait
+    while True:
+        handle = k32.CreateMutexW(None, False, name)
+        if not handle:
+            return True  # kilit oluşturulamadı: port denetimi yine çalışır
+        if ctypes.get_last_error() != 183:  # ERROR_ALREADY_EXISTS değil: ilk kopya biziz
+            _INSTANCE_MUTEX = handle
+            return True
+        k32.CloseHandle(handle)
+        if time.time() >= end:
+            return False
+        time.sleep(0.25)
+
+
 def _run_python_mode() -> bool:
     if len(sys.argv) >= 3 and sys.argv[1] == "--ada-run-python":
         code = sys.argv[2]
@@ -113,6 +171,7 @@ def _first_run_permissions(url: str) -> None:
 
 
 def main() -> None:
+    _keep_dll_dir_private()
     if _run_python_mode():
         return
 
@@ -122,7 +181,12 @@ def main() -> None:
 
     # Tek kopya: zaten çalışan bir ADA varsa onun penceresini öne getirip çık
     app_port = int(os.getenv("ADA_APP_PORT", "8765"))
-    if os.environ.pop("ADA_RESTARTING", None):
+    restarting = bool(os.environ.pop("ADA_RESTARTING", None))
+    # "Yeniden başlat"ta eski kopya kapanana kadar beklenir; aksi hâlde çalışan bir ADA varsa ikincisi açılmaz
+    if not _claim_single_instance(wait=20 if restarting else 0):
+        _existing_instance(app_port)  # penceresini öne getir (sunucusu henüz açılmadıysa sessizce geçer)
+        return
+    if restarting:
         # "Yeniden başlat" ile açıldık: kapanmakta olan eski kopya portu bırakana kadar bekle
         # (yoksa rastgele bir porta düşülür ve tek kopya denetimi çalışmaz)
         for _ in range(60):

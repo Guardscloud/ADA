@@ -926,5 +926,6 @@
 "🛡 Gözcü kontrol listesini denetliyor",
 "🛡 Gözcü kontrolü · {0}",
 "🛡 Gözcü sorunu inceliyor: {0}",
-"🛡 Gözcü: {0}"
+"🛡 Gözcü: {0}",
+"Sürüm {0} kurulamadı: ADA'dan açılmış başka bir program ADA'nın dosyalarını kullanıyordu. O programı kapatıp (ya da Windows'u yeniden başlatıp) tekrar deneyin."
 ]

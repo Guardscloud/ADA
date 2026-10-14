@@ -788,7 +788,7 @@
 "sure": "sure",
 "sure: 30": "sure: 30",
 "tamamlandı": "завершено",
-"tek görev 20 dakika sınırlıdır; \"devam et\" yazın veya isteği daraltın.": "одна задача ограничена 20 минутами; напишите «продолжить» или сузьте запрос.",
+"ADA uzun görevleri 20 dakikalık bölümler halinde kendiliğinden sürdürür; yalnızca ilerleme olmazsa durur. O zaman isteği daraltın.": "ADA автоматически продолжает длинные задачи 20-минутными отрезками и останавливается, только если нет прогресса. В этом случае сузьте запрос.",
 "ulaşılamıyor": "недоступно",
 "uygun motor yok": "нет подходящей модели",
 "veya": "или",
@@ -927,5 +927,6 @@
 "🛡 Gözcü kontrol listesini denetliyor": "🛡 Страж проверяет список проверки",
 "🛡 Gözcü kontrolü · {0}": "🛡 Проверка Стража · {0}",
 "🛡 Gözcü sorunu inceliyor: {0}": "🛡 Страж изучает проблему: {0}",
-"🛡 Gözcü: {0}": "🛡 Страж: {0}"
+"🛡 Gözcü: {0}": "🛡 Страж: {0}",
+"Sürüm {0} kurulamadı: ADA'dan açılmış başka bir program ADA'nın dosyalarını kullanıyordu. O programı kapatıp (ya da Windows'u yeniden başlatıp) tekrar deneyin.": "Не удалось установить версию {0}: другая программа, запущенная из ADA, использовала файлы ADA. Закройте эту программу (или перезагрузите Windows) и попробуйте снова."
 }

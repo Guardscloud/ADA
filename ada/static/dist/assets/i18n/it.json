@@ -788,7 +788,7 @@
 "sure": "sure",
 "sure: 30": "sure: 30",
 "tamamlandı": "completato",
-"tek görev 20 dakika sınırlıdır; \"devam et\" yazın veya isteği daraltın.": "una singola attività è limitata a 20 minuti; scrivete \"riprendi\" oppure restringete la richiesta.",
+"ADA uzun görevleri 20 dakikalık bölümler halinde kendiliğinden sürdürür; yalnızca ilerleme olmazsa durur. O zaman isteği daraltın.": "ADA prosegue automaticamente le attività lunghe in blocchi di 20 minuti e si ferma solo se non ci sono progressi. In tal caso, restringete la richiesta.",
 "ulaşılamıyor": "irraggiungibile",
 "uygun motor yok": "nessun motore adatto",
 "veya": "oppure",
@@ -927,5 +927,6 @@
 "🛡 Gözcü kontrol listesini denetliyor": "🛡 La Sentinella sta verificando l'elenco di controllo",
 "🛡 Gözcü kontrolü · {0}": "🛡 Controllo della Sentinella · {0}",
 "🛡 Gözcü sorunu inceliyor: {0}": "🛡 La Sentinella sta analizzando il problema: {0}",
-"🛡 Gözcü: {0}": "🛡 Sentinella: {0}"
+"🛡 Gözcü: {0}": "🛡 Sentinella: {0}",
+"Sürüm {0} kurulamadı: ADA'dan açılmış başka bir program ADA'nın dosyalarını kullanıyordu. O programı kapatıp (ya da Windows'u yeniden başlatıp) tekrar deneyin.": "Impossibile installare la versione {0}: un altro programma avviato da ADA stava usando i file di ADA. Chiudete quel programma (o riavviate Windows) e riprovate."
 }

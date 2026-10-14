@@ -927,5 +927,6 @@
 "🛡 Gözcü kontrol listesini denetliyor": "🛡 O Vigia está verificando a lista de verificação",
 "🛡 Gözcü kontrolü · {0}": "🛡 Verificação do Vigia · {0}",
 "🛡 Gözcü sorunu inceliyor: {0}": "🛡 O Vigia está investigando o problema: {0}",
-"🛡 Gözcü: {0}": "🛡 Vigia: {0}"
+"🛡 Gözcü: {0}": "🛡 Vigia: {0}",
+"Sürüm {0} kurulamadı: ADA'dan açılmış başka bir program ADA'nın dosyalarını kullanıyordu. O programı kapatıp (ya da Windows'u yeniden başlatıp) tekrar deneyin.": "Não foi possível instalar a versão {0}: outro programa aberto pelo ADA estava usando os arquivos do ADA. Feche esse programa (ou reinicie o Windows) e tente novamente."
 }

@@ -616,7 +616,7 @@ async def claude_code_loop(
         if turn.text:
             messages.append({"role": "assistant", "content": turn.text})
         if turn.limit_hit:
-            yield {"type": "error", "message": f"Adım sınırına ({max_steps}) ulaşıldı. 'devam et' yazarak sürdürebilirsiniz."}
+            yield {"type": "error", "limit": "steps", "message": f"Adım sınırına ({max_steps}) ulaşıldı. 'devam et' yazarak sürdürebilirsiniz."}
         elif not turn.text and turn.steps == 0:
             yield {"type": "error", "message": "Model boş yanıt döndü; tekrar deneyin."}
         save()

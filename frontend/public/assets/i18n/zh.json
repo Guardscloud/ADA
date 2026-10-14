@@ -788,7 +788,7 @@
 "sure": "sure",
 "sure: 30": "sure: 30",
 "tamamlandı": "已完成",
-"tek görev 20 dakika sınırlıdır; \"devam et\" yazın veya isteği daraltın.": "单个任务最长运行 20 分钟；请输入“继续”，或缩小请求范围。",
+"ADA uzun görevleri 20 dakikalık bölümler halinde kendiliğinden sürdürür; yalnızca ilerleme olmazsa durur. O zaman isteği daraltın.": "ADA 会以 20 分钟为一段自动继续长任务，仅在没有进展时停止。此时请缩小请求范围。",
 "ulaşılamıyor": "无法访问",
 "uygun motor yok": "没有合适的模型",
 "veya": "或",

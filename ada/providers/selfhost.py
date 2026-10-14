@@ -174,7 +174,7 @@ async def selfhost_loop(
 
         if not tool_calls:
             if finish == "length":
-                yield {"type": "error", "message": "Yanıt uzunluk sınırına ulaştı; 'devam et' yazarak sürdürebilirsiniz."}
+                yield {"type": "error", "limit": "length", "message": "Yanıt uzunluk sınırına ulaştı; 'devam et' yazarak sürdürebilirsiniz."}
             elif not text:
                 yield {"type": "error", "message": "Model boş yanıt döndü; tekrar deneyin."}
             save()
@@ -237,7 +237,7 @@ async def selfhost_loop(
         save()
         await asyncio.sleep(0)
 
-    yield {"type": "error", "message": f"Adım sınırına ({max_steps}) ulaşıldı. 'devam et' yazarak sürdürebilirsiniz."}
+    yield {"type": "error", "limit": "steps", "message": f"Adım sınırına ({max_steps}) ulaşıldı. 'devam et' yazarak sürdürebilirsiniz."}
 
 
 def describe_error(e: Exception) -> str | None:

@@ -225,7 +225,7 @@ const SECTIONS = [
           <b>Ekran kontrolü çalışmıyor:</b> Sistem Ayarları → Gizlilik ve Güvenlik → Ekran Kaydı ve Erişilebilirlik → ADA.
         </li>
         <li>
-          <b>Görev uzun sürdü ve durdu:</b> tek görev 20 dakika sınırlıdır; "devam et" yazın veya isteği daraltın.
+          <b>Görev uzun sürdü ve durdu:</b> ADA uzun görevleri 20 dakikalık bölümler halinde kendiliğinden sürdürür; yalnızca ilerleme olmazsa durur. O zaman isteği daraltın.
         </li>
         <li>
           <b>Yanlış bir şey yaptı:</b> Günlük / geri al → Yedekler'den dosyayı eski haline getirin.

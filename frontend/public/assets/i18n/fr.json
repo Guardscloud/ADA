@@ -788,7 +788,7 @@
 "sure": "sure",
 "sure: 30": "sure: 30",
 "tamamlandı": "terminé",
-"tek görev 20 dakika sınırlıdır; \"devam et\" yazın veya isteği daraltın.": "une seule tâche est limitée à 20 minutes ; écrivez « continuer » ou restreignez la demande.",
+"ADA uzun görevleri 20 dakikalık bölümler halinde kendiliğinden sürdürür; yalnızca ilerleme olmazsa durur. O zaman isteği daraltın.": "ADA poursuit automatiquement les longues tâches par tranches de 20 minutes et ne s'arrête qu'en l'absence de progrès. Dans ce cas, restreignez la demande.",
 "ulaşılamıyor": "inaccessible",
 "uygun motor yok": "aucun moteur adapté",
 "veya": "ou",

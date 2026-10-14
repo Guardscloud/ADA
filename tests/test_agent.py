@@ -207,10 +207,48 @@ async def test_old_tool_results_are_compacted_in_request(fake_gemini, monkeypatc
 @pytest.mark.asyncio
 async def test_turn_time_limit(fake_gemini, monkeypatch):
     monkeypatch.setattr(config, "MAX_TURN_MINUTES", 0.02)  # ~1,2 sn
+    monkeypatch.setattr(config, "AUTO_CONTINUE", False)
     fake_gemini(lambda c, cfg: gemini_response(call("run_shell", command="sleep 5")))
     conv, events = await run_task("uzun iş")
     assert any(e["type"] == "error" and "süre sınırı" in e["message"] for e in events)
     assert events[-1]["type"] == "done"
+
+
+@pytest.mark.asyncio
+async def test_time_limit_auto_continue_gives_up_without_progress(fake_gemini, monkeypatch):
+    monkeypatch.setattr(config, "MAX_TURN_MINUTES", 0.02)
+    fake_gemini(lambda c, cfg: gemini_response(call("run_shell", command="sleep 5")))
+    conv, events = await run_task("uzun iş")
+    assert [e for e in events if e["type"] == "step" and e["label"] == "Otomatik devam"]
+    errors_ = [e for e in events if e["type"] == "error"]
+    assert len(errors_) == 1 and "ilerleme olmadığı" in errors_[0]["message"]
+
+
+@pytest.mark.asyncio
+async def test_step_limit_auto_continues(fake_gemini, monkeypatch):
+    monkeypatch.setattr(config, "MAX_STEPS", 2)
+    n = iter(range(100))
+
+    def script(c, cfg):
+        i = next(n)
+        return gemini_response(text("Bitti.")) if i >= 5 else gemini_response(call("write_text_file", filename=f"{i}.md", content="x"))
+
+    fake_gemini(script)
+    conv, events = await run_task("çok adımlı iş")
+    assert not [e for e in events if e["type"] == "error"]
+    assert len([e for e in events if e["type"] == "step" and e["label"] == "Otomatik devam"]) == 2
+    assert "Bitti." in conv.ui[-1]["text"] and "Adım sınırına" not in conv.ui[-1]["text"]
+    assert any("[Otomatik devam]" in p.get("text", "") for m in conv.messages if m["role"] == "user" for p in m["parts"])
+
+
+@pytest.mark.asyncio
+async def test_routine_limit_is_hard(fake_gemini, monkeypatch):
+    monkeypatch.setattr(config, "MAX_STEPS", 1)
+    fake_gemini(lambda c, cfg: gemini_response(call("write_text_file", filename="r.md", content="x")))
+    conv = store.create()
+    events = [e async for e in agent.run_turn(conv, agent.build_user_content("rutin", []), "rutin", max_minutes=5)]
+    assert any(e["type"] == "error" and "Adım sınırına" in e["message"] for e in events)
+    assert not [e for e in events if e["type"] == "step" and e["label"] == "Otomatik devam"]
 
 
 def test_injection_scan():

@@ -102,6 +102,10 @@ MAX_STEPS = int(os.getenv("ADA_MAX_STEPS", "80"))
 SUBAGENT_MAX_STEPS = int(os.getenv("ADA_SUBAGENT_MAX_STEPS", "40"))
 # Tek bir tur (kullanıcı mesajı/hedef oturumu) en fazla bu kadar dakika sürer; sonra durup durumu raporlar
 MAX_TURN_MINUTES = float(os.getenv("ADA_MAX_TURN_MINUTES", "20"))
+# Süre/adım/uzunluk sınırına gelen görev durmak yerine kendiliğinden "devam et" ile sürer (rutinler hariç:
+# onların "sure:" değeri kesin sınırdır). ADA_AUTO_CONTINUE_MAX: en fazla kaç kez (0 = sınırsız).
+AUTO_CONTINUE = os.getenv("ADA_AUTO_CONTINUE", "true").lower() in ("1", "true", "yes", "on")
+AUTO_CONTINUE_MAX = int(os.getenv("ADA_AUTO_CONTINUE_MAX", "0"))
 
 # Özerklik seviyesi:
 #   full  - hiçbir şey sormaz (yalnızca felaket komutları engellenir: diski silme vb.)

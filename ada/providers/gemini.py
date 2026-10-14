@@ -244,7 +244,7 @@ async def gemini_loop(
             messages.append(types.Content(role="model", parts=parts).model_dump(mode="json", exclude_none=True))
         if not calls:
             if finish and "MAX_TOKENS" in finish:
-                yield {"type": "error", "message": "Yanıt uzunluk sınırına ulaştı; 'devam et' yazarak sürdürebilirsiniz."}
+                yield {"type": "error", "limit": "length", "message": "Yanıt uzunluk sınırına ulaştı; 'devam et' yazarak sürdürebilirsiniz."}
             elif blocked:
                 yield {"type": "error", "message": f"Gemini yanıtı güvenlik filtresi nedeniyle kesti ({finish})."}
             elif not parts:
@@ -307,4 +307,4 @@ async def gemini_loop(
         messages.append(types.Content(role="user", parts=response_parts + image_parts).model_dump(mode="json", exclude_none=True))
         save()
 
-    yield {"type": "error", "message": f"Adım sınırına ({max_steps}) ulaşıldı. 'devam et' yazarak sürdürebilirsiniz."}
+    yield {"type": "error", "limit": "steps", "message": f"Adım sınırına ({max_steps}) ulaşıldı. 'devam et' yazarak sürdürebilirsiniz."}

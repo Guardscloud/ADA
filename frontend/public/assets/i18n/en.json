@@ -788,7 +788,7 @@
 "sure": "sure",
 "sure: 30": "sure: 30",
 "tamamlandı": "completed",
-"tek görev 20 dakika sınırlıdır; \"devam et\" yazın veya isteği daraltın.": "a single task is limited to 20 minutes; type \"resume\" or narrow down the request.",
+"ADA uzun görevleri 20 dakikalık bölümler halinde kendiliğinden sürdürür; yalnızca ilerleme olmazsa durur. O zaman isteği daraltın.": "ADA continues long tasks automatically in 20-minute segments; it only stops when there is no progress. In that case, narrow down the request.",
 "ulaşılamıyor": "unreachable",
 "uygun motor yok": "no suitable engine",
 "veya": "or",

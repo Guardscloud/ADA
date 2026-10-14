@@ -635,7 +635,7 @@ async def agent_loop(
             if response.stop_reason == "refusal":
                 yield {"type": "error", "message": "Bu istek güvenlik politikası nedeniyle tamamlanamadı."}
             elif response.stop_reason == "max_tokens":
-                yield {"type": "error", "message": "Yanıt uzunluk sınırına ulaştı; 'devam et' yazarak sürdürebilirsiniz."}
+                yield {"type": "error", "limit": "length", "message": "Yanıt uzunluk sınırına ulaştı; 'devam et' yazarak sürdürebilirsiniz."}
             save()
             return
 
@@ -672,7 +672,47 @@ async def agent_loop(
         messages.append({"role": "user", "content": tool_results})
         save()
 
-    yield {"type": "error", "message": f"Adım sınırına ({max_steps}) ulaşıldı. 'devam et' yazarak sürdürebilirsiniz."}
+    yield {"type": "error", "limit": "steps", "message": f"Adım sınırına ({max_steps}) ulaşıldı. 'devam et' yazarak sürdürebilirsiniz."}
+
+
+_LIMIT_REASONS = {
+    "time": "{minutes:g} dakikalık bölüm süresi doldu",
+    "steps": "{steps} adımlık bölüm sınırı doldu",
+    "length": "yanıt uzunluk sınırına ulaştı",
+}
+
+
+def _drop_dangling_call(messages: list[dict]) -> None:
+    """Süre dolunca yanıtı gelmemiş araç çağrısı geçmişte kalabilir; sağlayıcılar bunu reddettiği için atılır."""
+    if not messages:
+        return
+    m = messages[-1]
+    parts = m.get("parts") if isinstance(m.get("parts"), list) else []
+    content = m.get("content") if isinstance(m.get("content"), list) else []
+    if (m.get("role") == "model" and any("function_call" in p for p in parts)
+            or m.get("role") == "assistant" and (m.get("tool_calls") or any(b.get("type") == "tool_use" for b in content))):
+        messages.pop()
+
+
+def _add_user_message(conv: Conversation, user_content: list[dict]) -> None:
+    """Kullanıcı mesajını etkin sağlayıcının geçmiş biçiminde ekler."""
+    if config.PROVIDER in GEMINI_FORMAT:
+        from .providers import gemini
+
+        msg = gemini.user_content(user_content)
+        if conv.messages and conv.messages[-1].get("role") == "user":
+            # Önceki tur araç sonucuyla bitmişse (ör. çevrilmiş eski görev) yeni mesaj aynı kullanıcı turuna eklenir
+            conv.messages[-1]["parts"] = conv.messages[-1].get("parts", []) + msg.get("parts", [])
+        else:
+            conv.messages.append(msg)
+    elif config.PROVIDER == "selfhost":
+        from .providers import selfhost
+
+        conv.messages.append(selfhost.user_content(user_content))
+    elif conv.messages and conv.messages[-1].get("role") == "user" and isinstance(conv.messages[-1]["content"], list):
+        conv.messages[-1]["content"] = conv.messages[-1]["content"] + user_content  # roller sırayla gitmeli
+    else:
+        conv.messages.append({"role": "user", "content": user_content})
 
 
 async def run_turn(
@@ -710,43 +750,64 @@ async def run_turn(
         yield {"type": "done"}
         return
 
-    if config.PROVIDER in GEMINI_FORMAT:
-        from .providers import gemini
-
-        msg = gemini.user_content(user_content)
-        if conv.messages and conv.messages[-1].get("role") == "user":
-            # Önceki tur araç sonucuyla bitmişse (ör. çevrilmiş eski görev) yeni mesaj aynı kullanıcı turuna eklenir
-            conv.messages[-1]["parts"] = conv.messages[-1].get("parts", []) + msg.get("parts", [])
-        else:
-            conv.messages.append(msg)
-    elif config.PROVIDER == "selfhost":
-        from .providers import selfhost
-
-        conv.messages.append(selfhost.user_content(user_content))
-    else:
-        conv.messages.append({"role": "user", "content": user_content})
+    _add_user_message(conv, user_content)
     conv.save()
 
+    # Etkileşimli görevler sınıra gelince kendiliğinden sürer; rutinlerin "sure:" değeri kesin sınırdır
+    auto = config.AUTO_CONTINUE and max_minutes is None
+    rounds = stalls = 0
+    kind = None
     try:
-        # Süre sınırı: takılan aramalar/döngüler turu sonsuza kadar uzatmasın (geçmiş yalnızca
-        # tamamlanan adımlarla güncellendiği için iptal tutarlı bir noktada kalır)
         def remember_engine(eng, kind: str = "") -> None:
             conv.engine = eng.id  # sonraki turda aynı motor öne çıkar (süreklilik)
             conv.kind = kind or conv.kind
 
-        async with asyncio.timeout(limit_minutes * 60):
-            async for ev in agent_loop(
-                conv.messages, system=_system(), tools=TOOLS, ui_entry=ui_entry, save=conv.save, max_steps=config.MAX_STEPS,
-                prefer=conv.engine or None, on_engine=remember_engine, previous_kind=conv.kind or None,
-            ):
-                if ev["type"] == "error":
-                    ui_entry["text"] += f"\n\n_{ev['message']}_"
-                yield ev
-    except TimeoutError:
-        yield fail(
-            f"Görev {limit_minutes:g} dakikalık süre sınırına ulaştı ve durduruldu. Yapılanlar yukarıda; "
-            "'devam et' yazarak sürdürebilir veya isteği daraltabilirsiniz."
-        )
+        while True:
+            before = len(conv.messages)
+            hit = hit_msg = None
+            # Süre sınırı: takılan aramalar/döngüler bölümü sonsuza kadar uzatmasın (geçmiş yalnızca
+            # tamamlanan adımlarla güncellendiği için iptal tutarlı bir noktada kalır)
+            try:
+                async with asyncio.timeout(limit_minutes * 60):
+                    async for ev in agent_loop(
+                        conv.messages, system=_system(), tools=TOOLS, ui_entry=ui_entry, save=conv.save,
+                        max_steps=config.MAX_STEPS, kind=kind, prefer=conv.engine or None, on_engine=remember_engine,
+                        previous_kind=conv.kind or None,
+                    ):
+                        if ev["type"] == "error":
+                            if auto and ev.get("limit"):
+                                hit, hit_msg = ev["limit"], ev["message"]  # kullanıcıya sorulmaz, aşağıda sürer
+                                continue
+                            ui_entry["text"] += f"\n\n_{ev['message']}_"
+                        yield ev
+            except TimeoutError:
+                hit = "time"
+                hit_msg = (f"Görev {limit_minutes:g} dakikalık süre sınırına ulaştı ve durduruldu. Yapılanlar yukarıda; "
+                           "'devam et' yazarak sürdürebilir veya isteği daraltabilirsiniz.")
+            if hit is None:
+                break
+            if hit == "time":
+                _drop_dangling_call(conv.messages)
+            stalls =0 if len(conv.messages) > before else stalls + 1
+            if not auto or stalls >= 2 or (config.AUTO_CONTINUE_MAX and rounds >= config.AUTO_CONTINUE_MAX):
+                if auto and stalls >= 2:
+                    hit_msg += " (Art arda ilerleme olmadığı için otomatik devam durdu.)"
+                yield fail(hit_msg)
+                break
+            rounds += 1
+            reason = _LIMIT_REASONS[hit].format(minutes=limit_minutes, steps=config.MAX_STEPS)
+            ev = {"type": "step", "label": "Otomatik devam", "detail": f"{reason}; kaldığı yerden sürüyor ({rounds}. kez)"}
+            ui_entry["steps"].append({"label": ev["label"], "detail": ev["detail"]})
+            yield ev
+            note = f"[Otomatik devam] Çalışma {reason} nedeniyle ara verdi. Kaldığın yerden sürdür; yapılan adımları tekrarlama."
+            if stalls:
+                note += " Son adım yarıda kaldı: aynı yolu tekrar deneme, farklı bir yol izle."
+            _add_user_message(conv, [{"type": "text", "text": note + " İş zaten bittiyse sonucu kısaca özetle."}])
+            kind = conv.kind or None  # devam mesajı yeniden sınıflandırılmaz, görev türü korunur
+            if ui_entry["text"] and not ui_entry["text"].endswith("\n"):
+                ui_entry["text"] += "\n\n"
+                yield {"type": "text", "text": "\n\n"}
+            conv.save()
     except asyncio.CancelledError:
         ui_entry["text"] += "\n\n_Görev kullanıcı tarafından durduruldu._"
         conv.save()

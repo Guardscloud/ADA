@@ -788,7 +788,7 @@
 "sure": "sure",
 "sure: 30": "sure: 30",
 "tamamlandı": "завершено",
-"tek görev 20 dakika sınırlıdır; \"devam et\" yazın veya isteği daraltın.": "одна задача ограничена 20 минутами; напишите «продолжить» или сузьте запрос.",
+"ADA uzun görevleri 20 dakikalık bölümler halinde kendiliğinden sürdürür; yalnızca ilerleme olmazsa durur. O zaman isteği daraltın.": "ADA автоматически продолжает длинные задачи 20-минутными отрезками и останавливается, только если нет прогресса. В этом случае сузьте запрос.",
 "ulaşılamıyor": "недоступно",
 "uygun motor yok": "нет подходящей модели",
 "veya": "или",

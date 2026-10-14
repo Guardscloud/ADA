@@ -2,7 +2,7 @@
 
 # Sürüm: her yayında artırılır (pyproject.toml ile aynı olmalı). Kurulum programı ve uygulama içi
 # güncelleme bu değeri kullanır.
-__version__ = "0.3.3"
+__version__ = "0.3.4"
 
 # Yayınların (kurulum programı), güncellemelerin ve geri bildirimlerin toplandığı GitHub deposu
 REPO = "Guardscloud/ADA"

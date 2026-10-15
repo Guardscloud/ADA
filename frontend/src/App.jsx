@@ -367,6 +367,7 @@ export default function App() {
           </div>
         )}
         <Thread
+          convId={currentId}
           entries={entries}
           running={running}
           onStop={stop}

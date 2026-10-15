@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { BarChart3, Clock, Download, FileSearch, FolderTree, Mail, Repeat, Sparkles, Square, Users } from "lucide-react";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
@@ -196,20 +196,51 @@ function EmptyState({ onExample, status, onOpenSettings }) {
   );
 }
 
-export default function Thread({ entries, running, onStop, onApprove, onExample, status, onOpenSettings }) {
+export default function Thread({ convId, entries, running, onStop, onApprove, onExample, status, onOpenSettings }) {
   const box = useRef(null);
+  const inner = useRef(null);
+  // Kullanıcı en altta mı? İçerik büyümeden önceki konuma göre tutulur
+  const stick = useRef(true);
+  const lastUserCount = useRef(0);
 
-  // Kullanıcı en alta yakınsa yeni içerikle birlikte kaydır
-  useEffect(() => {
+  const toBottom = () => {
     const el = box.current;
-    if (!el) return;
-    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 260;
-    if (nearBottom) el.scrollTop = el.scrollHeight;
+    if (el) el.scrollTop = el.scrollHeight;
+  };
+
+  const onScroll = () => {
+    const el = box.current;
+    if (el) stick.current = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+  };
+
+  // Sohbet değişince en alta in
+  useLayoutEffect(() => {
+    stick.current = true;
+    lastUserCount.current = entries.filter((e) => e.role === "user").length;
+    toBottom();
+  }, [convId]);
+
+  // Yeni içerik: kullanıcı mesaj gönderdiyse ya da zaten alttaysa kaydır
+  useLayoutEffect(() => {
+    const userCount = entries.filter((e) => e.role === "user").length;
+    if (userCount > lastUserCount.current) stick.current = true;
+    lastUserCount.current = userCount;
+    if (stick.current) toBottom();
   }, [entries]);
 
+  // Resim yüklenmesi, açılan adımlar vb. yüksekliği sonradan değiştirirse altta kal
+  useEffect(() => {
+    if (!inner.current || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => {
+      if (stick.current) toBottom();
+    });
+    ro.observe(inner.current);
+    return () => ro.disconnect();
+  }, []);
+
   return (
-    <div id="chat" ref={box}>
-      <div className="wrap">
+    <div id="chat" ref={box} onScroll={onScroll}>
+      <div className="wrap" ref={inner}>
         {entries.length === 0 && !running ? (
           <EmptyState onExample={onExample} status={status} onOpenSettings={onOpenSettings} />
         ) : (

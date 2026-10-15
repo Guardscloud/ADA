@@ -17,6 +17,7 @@ import socket
 import sys
 import threading
 import time
+import urllib.error
 import urllib.request
 
 
@@ -103,8 +104,12 @@ def _wait_ready(url: str, timeout: float = 60) -> bool:
     while time.time() < end:
         try:
             with urllib.request.urlopen(url + "/api/status", timeout=2) as r:
-                if r.status in (200, 401):
+                if r.status == 200:
                     return True
+        except urllib.error.HTTPError as e:
+            if e.code == 401:  # arayüz parolası açık: sunucu hazır, giriş ekranı pencerede gösterilir
+                return True
+            time.sleep(0.3)
         except Exception:  # noqa: BLE001 - henüz açılmadı
             time.sleep(0.3)
     return False
@@ -170,6 +175,55 @@ def _first_run_permissions(url: str) -> None:
             time.sleep(1.5)
 
 
+# Pencere ADA dışında bir sayfaya giderse (link, dosya önizlemesi) adres çubuğu olmadığından geri dönülemiyordu:
+# sayfanın üstüne Geri / ADA'ya dön çubuğu eklenir; Alt+Sol ok ve farenin geri tuşu da çalışır.
+_BACK_LABELS = {
+    "tr": ("Geri", "ADA'ya dön"), "en": ("Back", "Back to ADA"), "de": ("Zurück", "Zurück zu ADA"),
+    "fr": ("Retour", "Retour à ADA"), "es": ("Atrás", "Volver a ADA"), "pt": ("Voltar", "Voltar ao ADA"),
+    "it": ("Indietro", "Torna ad ADA"), "ru": ("Назад", "Вернуться в ADA"), "zh": ("返回", "回到 ADA"),
+    "ja": ("戻る", "ADA に戻る"),
+}
+
+_BACK_JS = """(function(){
+if (window.__adaBack) return; window.__adaBack = true;
+var HOME = %(home)s, back = function(){ if (history.length > 1) history.back(); else location.href = HOME; };
+var host = document.createElement('div');
+host.style.cssText = 'all:initial;position:fixed;top:10px;left:10px;z-index:2147483647';
+var root = host.attachShadow({mode:'closed'});
+root.innerHTML = '<style>div{display:flex;gap:6px;font:600 13px -apple-system,Segoe UI,sans-serif}'
+ + 'button{border:1px solid #d7d4cc;background:#fff;color:#1d1d1b;border-radius:999px;padding:7px 13px;cursor:pointer;'
+ + 'box-shadow:0 2px 10px rgba(0,0,0,.18)}button:hover{background:#f1efe9}'
+ + '@media(prefers-color-scheme:dark){button{background:#2a2926;color:#ecebe7;border-color:#45433e}button:hover{background:#34332f}}</style>'
+ + '<div><button id="b"></button><button id="h"></button></div>';
+root.getElementById('b').textContent = '\u2190 ' + %(back)s;
+root.getElementById('h').textContent = %(home_label)s;
+root.getElementById('b').onclick = back;
+root.getElementById('h').onclick = function(){ location.href = HOME; };
+(document.body || document.documentElement).appendChild(host);
+window.addEventListener('keydown', function(e){ if ((e.altKey && e.key === 'ArrowLeft') || e.key === 'BrowserBack') { e.preventDefault(); back(); } }, true);
+window.addEventListener('mouseup', function(e){ if (e.button === 3) { e.preventDefault(); back(); } }, true);
+})();"""
+
+
+def _needs_back_bar(current: str, base: str) -> bool:
+    """ADA'nın kendi arayüzü (ana sayfa, giriş) dışındaki her sayfada geri çubuğu gösterilir."""
+    if not current or current.startswith(("about:", "data:")):
+        return False
+    if not current.startswith(base):
+        return True
+    path = current[len(base):].split("?", 1)[0].split("#", 1)[0]
+    return path not in ("", "/", "/login")
+
+
+def _back_bar_js(base: str) -> str:
+    import json
+
+    from . import config
+
+    back, home = _BACK_LABELS.get(config.ui_language(), _BACK_LABELS["en"])
+    return _BACK_JS % {"home": json.dumps(base + "/"), "back": json.dumps(back), "home_label": json.dumps(home)}
+
+
 def main() -> None:
     _keep_dll_dir_private()
     if _run_python_mode():
@@ -211,6 +265,12 @@ def main() -> None:
     from . import config
     from . import server as server_mod
 
+    # Menüdeki Acil durdur / Devam et istekleri arayüz parolası açıkken de geçsin: bu sürece özel oturum
+    import secrets
+
+    own_session = secrets.token_urlsafe(32)
+    server_mod.SESSIONS.add(own_session)
+
     server = uvicorn.Server(uvicorn.Config(server_mod.app, host="127.0.0.1", port=port, log_level="warning"))
     thread = threading.Thread(target=server.run, name="ada-server", daemon=True)
     thread.start()
@@ -224,7 +284,7 @@ def main() -> None:
         threading.Thread(target=_first_run_permissions, args=(url,), daemon=True).start()
 
     def post(path: str) -> None:
-        req = urllib.request.Request(url + path, method="POST")
+        req = urllib.request.Request(url + path, method="POST", headers={"Cookie": f"ada_session={own_session}"})
         try:
             urllib.request.urlopen(req, timeout=10)
         except Exception as e:  # noqa: BLE001
@@ -294,6 +354,15 @@ def main() -> None:
     )
     window_ref.append(window)
     window.events.closing += on_closing
+
+    def on_loaded():
+        try:
+            if _needs_back_bar(window.get_current_url() or "", url):
+                window.evaluate_js(_back_bar_js(url))
+        except Exception as e:  # noqa: BLE001 - çubuk eklenemese de pencere çalışmaya devam eder
+            print(f"Geri çubuğu eklenemedi: {e}", file=sys.stderr)
+
+    window.events.loaded += on_loaded
     # İkinci kopya /api/instance/show çağırınca pencereyi öne getir (pywebview çağrıları iş parçacığı
     # güvenlidir: restore/show içeride GUI iş parçacığına yönlendirilir)
     server_mod.SHOW_WINDOW_HOOK = show_window

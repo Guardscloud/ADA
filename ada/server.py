@@ -642,6 +642,33 @@ async def client_error(body: ClientErrorIn):
     return {"ok": True}
 
 
+class OpenUrlIn(BaseModel):
+    url: str
+
+
+@app.post("/api/open-url")
+async def open_url(body: OpenUrlIn, request: Request):
+    """Arayüzdeki bir dış linki ADA penceresinin dışında açar: Tor açıksa Tor üzerinden, değilse varsayılan
+    tarayıcıda (pencere siteye gidip ADA'ya dönülemez hâle gelmesin)."""
+    _guard(request)
+    if not _local(request):
+        raise HTTPException(404)
+    url = body.url.strip()
+    if not url.lower().startswith(("http://", "https://")) or len(url) > 4000:
+        raise HTTPException(400, "Yalnızca http:// ve https:// bağlantıları açılabilir.")
+    try:
+        if tor.enabled():
+            msg = await asyncio.to_thread(tor.open_url, url)
+        else:
+            import webbrowser
+
+            webbrowser.open(url)
+            msg = f"Açıldı: {url}"
+    except tor.TorError as e:
+        raise HTTPException(503, str(e)) from e
+    return {"ok": True, "message": msg}
+
+
 class PermOpenIn(BaseModel):
     name: str
 

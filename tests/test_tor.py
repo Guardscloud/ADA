@@ -59,3 +59,20 @@ def test_open_url_goes_to_tor(monkeypatch):
 
     assert REGISTRY["open_item"].handler(url="https://example.com") == "ok"
     assert opened == ["https://example.com"]
+
+
+def test_open_url_endpoint(monkeypatch):
+    from fastapi.testclient import TestClient
+
+    from ada import server
+
+    monkeypatch.setenv("ADA_TOR", "true")
+    opened = []
+    monkeypatch.setattr(tor, "open_url", lambda url: opened.append(url) or "ok")
+    c = TestClient(server.app, client=("127.0.0.1", 5000))
+    assert c.post("/api/open-url", json={"url": "https://example.com"}).status_code == 200
+    assert opened == ["https://example.com"]
+    assert c.post("/api/open-url", json={"url": "file:///C:/Windows/notepad.exe"}).status_code == 400
+    # başka bir sitenin sayfasından gelen istek reddedilir
+    r = c.post("/api/open-url", json={"url": "https://example.com"}, headers={"Origin": "https://evil.example"})
+    assert r.status_code == 403 and len(opened) == 1

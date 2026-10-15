@@ -368,6 +368,35 @@ def test_existing_instance_shows_and_returns_true(monkeypatch):
     assert any("/api/instance/show" in u for u in posted)
 
 
+def test_wait_ready_accepts_password_401(monkeypatch):
+    """Arayüz parolası açıkken /api/status 401 döner; urlopen bunu hata olarak fırlatır. Sunucu yine hazır
+    sayılmalı, yoksa pencere hiç açılmaz ve ADA 60 sn sonra kapanır."""
+    import io
+    import urllib.error
+
+    from ada import desktop
+
+    def fake_urlopen(url, timeout=None):
+        raise urllib.error.HTTPError(url, 401, "Unauthorized", {}, io.BytesIO(b""))
+
+    monkeypatch.setattr(desktop.urllib.request, "urlopen", fake_urlopen)
+    assert desktop._wait_ready("http://127.0.0.1:1", timeout=2) is True
+
+
+def test_wait_ready_false_when_server_errors(monkeypatch):
+    import io
+    import urllib.error
+
+    from ada import desktop
+
+    def fake_urlopen(url, timeout=None):
+        raise urllib.error.HTTPError(url, 500, "err", {}, io.BytesIO(b""))
+
+    monkeypatch.setattr(desktop.urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setattr(desktop.time, "sleep", lambda s: None)
+    assert desktop._wait_ready("http://127.0.0.1:1", timeout=0.2) is False
+
+
 def test_existing_instance_hidden_does_not_show(monkeypatch):
     import json
 
@@ -422,3 +451,19 @@ def test_request_all_off_mac_reports_not_needed():
 
     results = permissions.request_all()
     assert results and results[0]["ok"] is False
+
+
+# ---------------------------------------------------------------- desktop: dış sayfada geri çubuğu
+
+def test_back_bar_only_outside_ada_ui():
+    from ada import desktop
+
+    base = "http://127.0.0.1:8765"
+    assert not desktop._needs_back_bar(base + "/", base)
+    assert not desktop._needs_back_bar(base + "/?x=1", base)
+    assert not desktop._needs_back_bar(base + "/login", base)
+    assert not desktop._needs_back_bar("about:blank", base)
+    assert desktop._needs_back_bar("https://example.com/", base)
+    assert desktop._needs_back_bar(base + "/api/files/outputs/a.png", base)
+    js = desktop._back_bar_js(base)
+    assert '"http://127.0.0.1:8765/"' in js and "history.back()" in js

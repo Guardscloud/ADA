@@ -25,6 +25,7 @@ os.environ.update({
     "ADA_ENABLE_COMPUTER": "true",
     "ADA_ENABLE_MAC_APPS": "false",
     "ADA_NO_DISCOVERY": "1",  # yerel model/bulut taraması testlerde çalışmaz
+    "ADA_TOR": "false",  # testler Tor indirmesin/başlatmasın (test_tor.py ayrıca açar)
 })
 
 import pytest  # noqa: E402

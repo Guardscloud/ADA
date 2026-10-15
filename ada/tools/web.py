@@ -2,13 +2,22 @@
 
 Claude'da bunların yerine Anthropic'in sunucu araçları (web_search / web_fetch) kullanılır;
 bu modül Gemini gibi sunucu aracı olmayan sağlayıcılar içindir (bkz. agent.build_tools).
+Tor açıksa (ADA_TOR, varsayılan) istekler Tor üzerinden gider; Tor yoksa doğrudan gönderilmez (bkz. tor.py).
 """
 
 from __future__ import annotations
 
 import httpx
 
+from .. import tor
 from . import ToolError, tool
+
+
+def _proxy() -> str | None:
+    try:
+        return tor.proxy_url()
+    except tor.TorError as e:
+        raise ToolError(str(e))
 
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36"
 MAX_CHARS = 40_000
@@ -28,8 +37,9 @@ MAX_CHARS = 40_000
 def web_search(query: str, max_results: int = 8, region: str = "tr-tr") -> str:
     from ddgs import DDGS
 
+    proxy = _proxy()
     try:
-        results = DDGS().text(query, region=region, max_results=min(max(max_results, 1), 20))
+        results = DDGS(proxy=proxy, timeout=30 if proxy else 5).text(query, region=region, max_results=min(max(max_results, 1), 20))
     except Exception as e:  # noqa: BLE001
         raise ToolError(f"Arama başarısız: {e}")
     if not results:
@@ -49,8 +59,9 @@ def web_search(query: str, max_results: int = 8, region: str = "tr-tr") -> str:
 def web_fetch(url: str) -> str:
     if not url.startswith(("http://", "https://")):
         raise ToolError("URL http:// veya https:// ile başlamalı.")
+    proxy = _proxy()
     try:
-        resp = httpx.get(url, headers={"User-Agent": UA}, follow_redirects=True, timeout=30)
+        resp = httpx.get(url, headers={"User-Agent": UA}, follow_redirects=True, timeout=60 if proxy else 30, proxy=proxy)
         resp.raise_for_status()
     except httpx.HTTPError as e:
         raise ToolError(f"Sayfa alınamadı: {e}")

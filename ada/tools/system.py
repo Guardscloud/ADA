@@ -10,7 +10,7 @@ import sys
 from contextvars import ContextVar
 from pathlib import Path
 
-from .. import config, safety
+from .. import config, safety, tor
 from . import ToolError, ToolResult, downloadable, guard_write, resolve_path, tool
 
 HOME = Path.home()
@@ -353,13 +353,18 @@ if config.ENABLE_SHELL:
 
     @tool(
         "open_item",
-        "Uygulama, dosya veya URL açar (macOS 'open'). Örn: app='Safari', path='~/Desktop/rapor.docx', "
+        "Uygulama, dosya veya URL açar (macOS 'open'). Siteler Tor ayarı açıksa Tor üzerinden açılır. Örn: app='Safari', path='~/Desktop/rapor.docx', "
         "url='https://...'. Dosyayı belirli uygulamayla açmak için path+app birlikte verilebilir.",
         {"app": {"type": "string"}, "path": {"type": "string"}, "url": {"type": "string"}},
     )
     def open_item(app: str = "", path: str = "", url: str = "") -> str:
         if not (app or path or url):
             raise ToolError("app, path veya url gerekli.")
+        if url and not path and url.lower().startswith(("http://", "https://")) and tor.enabled():
+            try:  # siteler kullanıcının bağlantısından değil Tor'dan açılır (Ayarlar'dan kapatılabilir)
+                return tor.open_url(url)
+            except tor.TorError as e:
+                raise ToolError(str(e))
         if not config.IS_MAC:
             target = url or str(resolve_path(path, must_exist=True))
             if sys.platform.startswith("win"):

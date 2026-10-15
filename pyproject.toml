@@ -1,6 +1,6 @@
 [project]
 name = "ada-agi"
-version = "0.3.6"
+version = "0.3.7"
 description = "ADA - beyaz yaka işlerini yapan otonom yapay zeka çalışanı"
 requires-python = ">=3.12"
 dependencies = [
@@ -27,6 +27,7 @@ dependencies = [
     "pywinpty>=3.0.5 ; sys_platform == 'win32'",
     "qrcode[pil]>=8.2",
     "reportlab>=5.0.1",
+    "socksio>=1.0.0",
     "trafilatura>=2.2.0",
     "uvicorn[standard]>=0.54.0",
 ]

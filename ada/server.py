@@ -22,7 +22,7 @@ from fastapi import FastAPI, File, HTTPException, Request, UploadFile, WebSocket
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel, ValidationError
 
-from . import approval, config, goals, router, routines, runtime, safety, scheduler, settings, skills, store, terminal, triggers, updater, watchdog
+from . import approval, config, goals, router, routines, runtime, safety, scheduler, settings, skills, store, terminal, tor, triggers, updater, watchdog
 from .agent import dumps
 from .runtime import RUNS
 from .tools import REGISTRY, ToolError, safe_path
@@ -53,10 +53,12 @@ async def lifespan(_app: FastAPI):
         asyncio.create_task(router.discovery_loop()),  # yerel modelleri ve anahtarlı bulut modellerini tanır
         asyncio.create_task(updater.loop()),  # yeni sürüm var mı diye bakar
     ]
+    tor.warm_up()  # ilk web isteği Tor'un açılmasını beklemesin
     yield
     for t in tasks:
         t.cancel()
     terminal.kill_all()
+    tor.stop()
 
 
 app = FastAPI(title="ADA-AGI", lifespan=lifespan)

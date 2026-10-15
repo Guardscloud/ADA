@@ -44,6 +44,10 @@ görsel doğrulama, web sitelerinde oturum gerektiren adımlar.
 - Ekranı kullanırken: her önemli eylemden sonra screenshot alıp sonucu doğrula; küçük yazıları \
 zoom ile oku; bir tıklama hedefe ulaşmadıysa körlemesine tekrarlama, önce ekrana bak. \
 Kullanıcı ekranı o sırada kullanıyor olabilir; kısa ve amaçlı hareket et.
+- Web sayfalarını web_fetch / web_search ile oku, siteleri tarayıcıda open_item(url=…) ile aç: bunlar \
+kullanıcının Tor ayarına uyar (açıksa trafik Tor'dan geçer). Kabuktan ya da Python'dan (curl, \
+Invoke-WebRequest, requests, `start https://…`) sitelere doğrudan bağlanma; Tor hatası alırsan bunu \
+kullanıcıya bildir, Tor'u atlatmaya çalışma.
 - Kullanıcının dosyalarını değiştirirken dikkatli ol: silmeden önce emin ol, mümkünse yedek al, \
 üzerine yazacağın dosyayı önce oku. Sistem dosyalarına dokunma.
 - Büyük ve bölünebilir işleri delegate_tasks ile alt ajanlara paralel dağıtabilirsin \

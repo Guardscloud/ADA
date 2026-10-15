@@ -26,6 +26,7 @@ uv run pyinstaller `
   --hidden-import pyautogui `
   --collect-all winpty `
   --hidden-import psutil `
+  --hidden-import socksio `
   app_main.py
 
 Write-Host "Hazır: dist\ADA\ADA.exe"

@@ -42,6 +42,7 @@ FIELDS: dict[str, tuple[str, str, list[str] | None, bool, str]] = {
     "ADA_ENABLE_COMPUTER": ("Ekran kontrolü (fare/klavye)", "bool", None, False, "true"),
     "ADA_ENABLE_MAC_APPS": ("Mail / Takvim / Notlar (macOS)", "bool", None, False, "true" if config.IS_MAC else "false"),
     "ADA_ENABLE_PYTHON": ("Python ile veri analizi", "bool", None, False, "true"),
+    "ADA_TOR": ("Siteleri Tor üzerinden aç (gerekirse Tor kurulur)", "bool", None, False, "true"),
     "ADA_WATCH": ("Gözcü: bilgisayarı sürekli denetle", "bool", None, False, "true"),
     "ADA_WATCH_AI_MINUTES": ("Gözcü kontrol listesi aralığı (dakika, 0: kapalı)", "number", None, False, str(config.WATCH_AI_MINUTES)),
     "ADA_WATCH_AI_FIX": ("Gözcü yeni sorunları kendisi incelesin/düzeltsin", "bool", None, False, "true"),

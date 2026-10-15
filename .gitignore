@@ -8,3 +8,4 @@ evals/results/
 /dist/
 /build/
 *.spec
+/tor/

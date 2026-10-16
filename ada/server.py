@@ -1379,6 +1379,39 @@ async def upload(file: UploadFile = File(...)):
     return {"path": dest.relative_to(config.WORKSPACE).as_posix(), "name": dest.name}
 
 
+@app.get("/api/voice")
+async def voice_status():
+    from . import transcribe
+
+    return transcribe.status()
+
+
+@app.post("/api/voice/transcribe")
+async def voice_transcribe(request: Request, file: UploadFile = File(...)):
+    from . import transcribe
+
+    _guard(request)
+    audio = await file.read(transcribe.MAX_BYTES + 1)
+    try:
+        return {"text": await transcribe.transcribe(audio, file.content_type or "audio/wav")}
+    except transcribe.TranscribeError as e:
+        raise HTTPException(400, str(e)) from e
+
+
+@app.post("/api/voice/dictation")
+async def voice_dictation(request: Request):
+    from . import transcribe
+
+    _guard(request)
+    if not _local(request):  # tuş vuruşu bu bilgisayarın ekranına gider: ağdan açılamaz
+        raise HTTPException(403, "Sesle yazma yalnızca bu bilgisayardaki ADA penceresinden açılabilir.")
+    try:
+        transcribe.windows_dictation()
+    except transcribe.TranscribeError as e:
+        raise HTTPException(400, str(e)) from e
+    return {"ok": True}
+
+
 @app.get("/api/files/{path:path}")
 async def download(path: str):
     try:

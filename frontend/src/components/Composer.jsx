@@ -1,32 +1,73 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowUp, FileText, Mic, Paperclip, X } from "lucide-react";
-import { upload } from "../api";
-import { listen, recognitionSupported } from "../voice";
+import { ArrowUp, FileText, LoaderCircle, Mic, Paperclip, X } from "lucide-react";
+import { api, upload } from "../api";
+import { recordingSupported, startRecording, transcribe } from "../voice";
+
+const isMac = /Mac/i.test(navigator.platform || navigator.userAgent);
+const DICTATION_HINT = isMac
+  ? "macOS dikte özelliğini de kullanabilirsiniz: metin kutusuna tıklayıp Fn (🌐) tuşuna iki kez basın."
+  : "Windows'un sesle yazma özelliğini de kullanabilirsiniz: metin kutusuna tıklayıp Windows + H tuşlarına basın.";
 
 export default function Composer({ onSend, disabled, prefill, onPrefillUsed }) {
   const [text, setText] = useState("");
   const [attachments, setAttachments] = useState([]);
   const area = useRef(null);
-  const [listening, setListening] = useState(false);
-  const stopRef = useRef(null);
+  const [mic, setMic] = useState("idle"); // idle | rec | busy
+  const recRef = useRef(null);
 
-  const toggleMic = () => {
-    if (listening) {
-      stopRef.current?.();
-      return;
+  const finishRecording = async () => {
+    const rec = recRef.current;
+    recRef.current = null;
+    if (!rec) return;
+    setMic("busy");
+    try {
+      const said = (await transcribe(await rec.stop())).trim();
+      if (said) setText((prev) => (prev && !prev.endsWith(" ") ? prev + " " : prev) + said);
+    } catch (e) {
+      alert(e.message);
+    } finally {
+      setMic("idle");
+      area.current?.focus();
     }
-    if (!recognitionSupported()) {
-      alert("Bu pencerede konuşarak yazma desteklenmiyor. macOS dikte özelliğini kullanın: metin kutusuna tıklayıp Fn (🌐) tuşuna iki kez basın.");
+  };
+
+  const toggleMic = async () => {
+    if (mic === "busy") return;
+    if (mic === "rec") return finishRecording();
+    if (!recordingSupported()) {
+      alert("Bu pencerede mikrofon kullanılamıyor. " + DICTATION_HINT);
       area.current?.focus();
       return;
     }
-    const base = text ? text + " " : "";
-    setListening(true);
-    stopRef.current = listen(
-      (t) => setText(base + t),
-      () => setListening(false),
-    );
+    try {
+      const st = await api("/api/voice");
+      if (!st.available) {
+        area.current?.focus();
+        if (st.dictation) {
+          // Anahtar yok: Windows'un sesle yazma özelliği açılır, söylenenler doğrudan metin kutusuna yazılır
+          try {
+            await api("/api/voice/dictation", { method: "POST" });
+            return;
+          } catch {
+            /* aşağıdaki açıklama gösterilir */
+          }
+        }
+        alert("Konuşarak yazma için Ayarlar → Yapay zekâ bölümünden bir Gemini (ücretsiz), Groq veya OpenAI anahtarı girin. " + DICTATION_HINT);
+        return;
+      }
+      recRef.current = await startRecording(finishRecording);
+      setMic("rec");
+    } catch (e) {
+      recRef.current = null;
+      setMic("idle");
+      const denied = e?.name === "NotAllowedError" || e?.name === "SecurityError";
+      const missing = e?.name === "NotFoundError";
+      alert(denied ? "Mikrofon izni verilmedi. Windows Ayarlar → Gizlilik → Mikrofon bölümünden masaüstü uygulamalarına izin verin."
+        : missing ? "Mikrofon bulunamadı." : e.message);
+    }
   };
+
+  useEffect(() => () => recRef.current?.cancel(), []);
   const fileInput = useRef(null);
 
   useEffect(() => {
@@ -100,8 +141,13 @@ export default function Composer({ onSend, disabled, prefill, onPrefillUsed }) {
               <Paperclip size={18} />
             </button>
             <input type="file" ref={fileInput} multiple hidden onChange={pick} />
-            <button className={"iconbtn" + (listening ? " rec" : "")} title="Konuşarak yaz" onClick={toggleMic}>
-              <Mic size={18} />
+            <button
+              className={"iconbtn" + (mic === "rec" ? " rec" : mic === "busy" ? " busy" : "")}
+              title={mic === "rec" ? "Bitirmek için tıklayın" : mic === "busy" ? "Yazıya çevriliyor…" : "Konuşarak yaz"}
+              onClick={toggleMic}
+              disabled={mic === "busy"}
+            >
+              {mic === "busy" ? <LoaderCircle size={18} className="spin" /> : <Mic size={18} />}
             </button>
             <span className="hint">Enter gönderir · Shift+Enter yeni satır · Fareyi sol üst köşeye götürmek ekran kontrolünü durdurur</span>
             <button id="sendBtn" onClick={submit} disabled={disabled || !text.trim()} title="Gönder">

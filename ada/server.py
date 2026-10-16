@@ -851,7 +851,7 @@ class LangIn(BaseModel):
 
 @app.post("/api/lang")
 async def set_lang(request: Request):
-    """Arayüz dilini kaydeder ("auto": sistem dili). Hemen geçerlidir; arayüz sayfayı yeniler."""
+    """Arayüz dilini kaydeder ("auto": seçim yok, İngilizce). Hemen geçerlidir; arayüz sayfayı yeniler."""
     _guard(request)
     body = await _json_body(request, LangIn)
     try:

@@ -350,7 +350,9 @@ def main() -> None:
         confirm_close=not config.KEEP_RUNNING,
         text_select=True,
         minimized="--hidden" in sys.argv,  # oturum açılışında sessiz başlat
-        localization={"global.quitConfirmation": "ADA kapatılsın mı? Çalışan görevler ve arka plan işleri durur."},
+        localization={"global.quitConfirmation": "ADA kapatılsın mı? Çalışan görevler ve arka plan işleri durur."
+                      if config.ui_language() == "tr" else
+                      "Close ADA? Running tasks and background jobs will stop."},
     )
     window_ref.append(window)
     window.events.closing += on_closing

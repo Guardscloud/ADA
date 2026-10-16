@@ -67,7 +67,11 @@ def test_default_reply_language_follows_interface_language(monkeypatch):
     hint = agent._language_hint()
     assert "varsayılan dil: Deutsch" in hint and "hangi dilde yazarsa o dilde" in hint
     assert hint in agent._context_block()["text"]
-    monkeypatch.setenv("ADA_LANG", "auto")
-    assert config.ui_language() in config.LANGS  # sistem dili; desteklenmiyorsa İngilizce
-    monkeypatch.setenv("ADA_LANG", "xx")
-    assert config.ui_language() in config.LANGS
+    # Dil seçilmemişse sistem dili ne olursa olsun İngilizce
+    for value in ("auto", "", "xx"):
+        monkeypatch.setenv("ADA_LANG", value)
+        assert config.ui_language() == "en"
+    monkeypatch.delenv("ADA_LANG")
+    assert config.ui_language() == "en"
+    monkeypatch.setenv("ADA_LANG", "tr")
+    assert config.ui_language() == "tr"

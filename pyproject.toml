@@ -1,6 +1,6 @@
 [project]
 name = "ada-agi"
-version = "0.3.11"
+version = "0.3.12"
 description = "ADA - beyaz yaka işlerini yapan otonom yapay zeka çalışanı"
 requires-python = ">=3.12"
 dependencies = [

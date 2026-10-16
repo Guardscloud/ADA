@@ -136,9 +136,8 @@ export async function initI18n() {
   } catch {
     setting = "auto";
   }
-  // Otomatik: sistem dili desteklenmiyorsa Türkçe bilmeyen kullanıcı için İngilizce
-  const system = (navigator.language || "tr").slice(0, 2).toLowerCase();
-  lang = setting !== "auto" && LANGS[setting] ? setting : LANGS[system] ? system : "en";
+  // Dil seçilmemişse ADA İngilizce açılır (sistem diline bakılmaz); Türkçe ve diğerleri seçiciden seçilir
+  lang = LANGS[setting] ? setting : "en";
   document.documentElement.lang = lang;
   if (lang === "tr") return;
   try {

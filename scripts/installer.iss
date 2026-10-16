@@ -39,7 +39,9 @@ UninstallDisplayName={#AppName}
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
-ShowLanguageDialog=auto
+ShowLanguageDialog=yes
+; Kurulum İngilizce açılır (Windows'un diline bakılmaz); kullanıcı ilk ekranda başka dil seçebilir
+LanguageDetectionMethod=none
 CloseApplications=no
 #ifdef Sign
 ; build_installer.ps1 "ps" imza aracını tanımlar (scripts\sign.ps1): kurulum programı ve kaldırıcı imzalanır
@@ -48,7 +50,7 @@ SignedUninstaller=yes
 #endif
 
 [Languages]
-; Kurulum, Windows'un diline göre açılır (desteklenmeyen dilde İngilizce); kullanıcı ilk ekranda değiştirebilir
+; İlk dil (en) varsayılandır; kullanıcı ilk ekranda değiştirebilir
 Name: "en"; MessagesFile: "compiler:Default.isl"
 Name: "tr"; MessagesFile: "compiler:Languages\Turkish.isl"
 Name: "de"; MessagesFile: "compiler:Languages\German.isl"

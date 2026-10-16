@@ -224,8 +224,35 @@ def _back_bar_js(base: str) -> str:
     return _BACK_JS % {"home": json.dumps(base + "/"), "back": json.dumps(back), "home_label": json.dumps(home)}
 
 
+def _hide_child_consoles(*, force: bool = False) -> bool:
+    """Windows'ta konsolu olmayan ADA (pencereli exe) bir konsol programı başlatınca (PowerShell, git, python...)
+    Windows her biri için siyah bir pencere açar. Bayrak verilmemiş her alt süreç CREATE_NO_WINDOW ile başlatılır:
+    ADA'nın kendi çağrıları da, kütüphanelerinkiler de. Pencereli programlar (Not Defteri, tarayıcı) etkilenmez;
+    kendi bayrağını veren çağrılara (ör. CREATE_NEW_CONSOLE) dokunulmaz. Konsoldan çalıştırılınca gerekmez."""
+    if sys.platform != "win32":
+        return False
+    import ctypes
+    import subprocess
+
+    if not force and ctypes.windll.kernel32.GetConsoleWindow():
+        return False
+    if getattr(subprocess.Popen.__init__, "_ada_no_window", False):
+        return True
+    original = subprocess.Popen.__init__
+
+    def __init__(self, *args, **kwargs):
+        if len(args) < 14 and not kwargs.get("creationflags"):  # 14. konumsal parametre creationflags
+            kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+        original(self, *args, **kwargs)
+
+    __init__._ada_no_window = True
+    subprocess.Popen.__init__ = __init__
+    return True
+
+
 def main() -> None:
     _keep_dll_dir_private()
+    _hide_child_consoles()
     if _run_python_mode():
         return
 

@@ -19,6 +19,37 @@ from ada import config
 pytestmark = pytest.mark.skipif(not config.IS_WIN, reason="Yalnızca Windows")
 
 
+# ---------------------------------------------------------------- konsol pencereleri
+
+def test_child_processes_start_without_a_console_window(monkeypatch):
+    import subprocess
+
+    from ada import desktop
+
+    seen = []
+
+    def fake_init(self, *args, **kwargs):
+        seen.append(kwargs.get("creationflags", 0))
+
+    monkeypatch.setattr(subprocess.Popen, "__init__", fake_init)
+    assert desktop._hide_child_consoles(force=True)
+    assert desktop._hide_child_consoles(force=True)  # ikinci kez sarmalanmaz
+    subprocess.Popen(["powershell", "-Command", "1"])
+    subprocess.Popen(["cmd"], creationflags=subprocess.CREATE_NEW_CONSOLE)  # kendi bayrağı korunur
+    assert seen == [subprocess.CREATE_NO_WINDOW, subprocess.CREATE_NEW_CONSOLE]
+
+
+def test_hidden_powershell_still_returns_output(monkeypatch):
+    import subprocess
+
+    from ada import desktop
+
+    monkeypatch.setattr(subprocess.Popen, "__init__", subprocess.Popen.__init__)
+    desktop._hide_child_consoles(force=True)
+    out = subprocess.run(["powershell", "-NoProfile", "-Command", "Write-Output gizli"], capture_output=True, text=True, timeout=60)
+    assert out.stdout.strip() == "gizli"
+
+
 # ---------------------------------------------------------------- bildirimler (notify)
 
 def test_toast_script_escapes_xml_and_quotes():

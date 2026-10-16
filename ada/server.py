@@ -396,6 +396,7 @@ def _ai_payload() -> dict:
         "engines": rows,
         "cloud": cloud,
         "claude_code": state["cloud_status"].get(engines.CLAUDE_CODE, {}),
+        "opencode": state["cloud_status"].get(engines.OPENCODE, {}),
         "local": local,
         "custom": custom,
         "kinds": router.KINDS,
@@ -423,7 +424,7 @@ async def ai_scan(request: Request):
     _guard(request)
     body = await _json_body(request, AIScanIn)
     if body.target == "local":
-        await asyncio.gather(engines.scan_local(), engines.scan_claude_code())  # Claude Code da bu bilgisayardadır
+        await asyncio.gather(engines.scan_local(), engines.scan_agents())  # Claude Code / OpenCode da bu bilgisayardadır
     elif body.target == "all":
         await engines.scan_all()
     elif body.target in engines.PROVIDERS and not engines.PROVIDERS[body.target].local:
@@ -583,6 +584,10 @@ async def ai_test(request: Request):
                 from .providers import claude_code
 
                 answer = await claude_code.ask(eng.model, "Yalnızca 'hazırım' yaz.")
+            elif eng.family == "opencode":
+                from .providers import opencode
+
+                answer = await opencode.ask(eng.model, "Yalnızca 'hazırım' yaz.")
             else:
                 from .providers.selfhost import Endpoint, get_client as oa_client
 

@@ -19,6 +19,28 @@ const CLAUDE_CODE_STATE = {
   nologin: ["oturum açılmamış", "waiting"],
   missing: ["kurulu değil", "off"],
 };
+// Bu bilgisayardaki kodlama ajanları: düşünen onlar, araçları çalıştıran ADA
+const AGENTS = [
+  {
+    key: "claude_code",
+    provider: "claudecode",
+    name: "Claude Code",
+    label: "Claude Code (abonelik)",
+    note: "API anahtarı gerekmez; bu bilgisayardaki Claude Code oturumu kullanılır",
+    install: "Kurmak için terminalde: npm install -g @anthropic-ai/claude-code — ardından claude yazıp /login ile oturum açın.",
+  },
+  {
+    key: "opencode",
+    provider: "opencode",
+    name: "OpenCode",
+    label: "OpenCode (CLI)",
+    note: "Ücretsiz modeller ve OpenCode'da bağlı sağlayıcılar (Zen, Copilot, ChatGPT aboneliği…) anahtar girmeden kullanılır",
+    warn:
+      "Ücretsiz modeller yalnızca OpenCode kendi araçlarıyla (bash, dosya düzenleme) çalışırken kullanılabilir. Bu araçlar çalışma klasörünün dışına çıkamaz ve her işlem günlüğe yazılır, ama ADA'nın onay ve yedek adımından geçmez. Bu yüzden ücretsiz modeller kapalı gelir; kutucuğu işaretleyerek açabilirsiniz.",
+    states: { nologin: "sağlayıcı bağlı değil" },
+    install: "Kurmak için terminalde: npm install -g opencode-ai — ardından opencode auth login ile bir sağlayıcı bağlayın.",
+  },
+];
 
 const post = (path, body) => api(path, { method: "POST", body: JSON.stringify(body || {}) });
 
@@ -127,7 +149,6 @@ export default function AIPanel({ legacy, onRestart }) {
   };
 
   const localEngines = ai.engines.filter((e) => e.local);
-  const claudeCodeEngines = ai.engines.filter((e) => e.provider === "claudecode");
   const enabledCount = ai.engines.filter((e) => e.enabled && e.available).length;
   const foundServers = ai.local.filter((s) => s.state && !["missing", "unknown"].includes(s.state));
   const missing = ai.local.filter((s) => s.state === "missing").map((s) => s.label);
@@ -197,37 +218,39 @@ export default function AIPanel({ legacy, onRestart }) {
           </button>
         </div>
         <p className="ai-note">Anahtar girdiğiniz sağlayıcının modelleri listelenir ve en iyileri açılır. Yeniden başlatma gerekmez.</p>
-        {CLAUDE_CODE_STATE[ai.claude_code?.state] && (
-          <div className={"ai-card" + (ai.claude_code.state === "ok" ? " set" : "")}>
-            <div className="ai-card-head" onClick={() => setOpen((o) => ({ ...o, _claudeCode: !o._claudeCode }))}>
-              <b>Claude Code (abonelik)</b>
-              <small>API anahtarı gerekmez; bu bilgisayardaki Claude Code oturumu kullanılır</small>
-              <span className={"badge " + CLAUDE_CODE_STATE[ai.claude_code.state][1]}>{CLAUDE_CODE_STATE[ai.claude_code.state][0]}</span>
-              {ai.claude_code.state === "ok" && (
-                <span className="ai-count">
-                  {claudeCodeEngines.filter((e) => e.enabled).length}/{claudeCodeEngines.length} model açık
-                </span>
-              )}
-              <span className="ai-caret">{open._claudeCode ? "▾" : "▸"}</span>
-            </div>
-            {open._claudeCode && (
-              <div className="ai-card-body">
-                {ai.claude_code.detail && <div className="ai-note">{ai.claude_code.detail}</div>}
-                {ai.claude_code.state === "missing" && (
-                  <div className="ai-note">
-                    Kurmak için terminalde: npm install -g @anthropic-ai/claude-code — ardından claude yazıp /login ile oturum açın.
-                  </div>
+        {AGENTS.map((a) => {
+          const st = ai[a.key];
+          const rows = ai.engines.filter((e) => e.provider === a.provider);
+          if (!CLAUDE_CODE_STATE[st?.state]) return null;
+          return (
+            <div key={a.key} className={"ai-card" + (st.state === "ok" ? " set" : "")}>
+              <div className="ai-card-head" onClick={() => setOpen((o) => ({ ...o, ["_" + a.key]: !o["_" + a.key] }))}>
+                <b>{a.label}</b>
+                <small>{a.note}</small>
+                <span className={"badge " + CLAUDE_CODE_STATE[st.state][1]}>{a.states?.[st.state] || CLAUDE_CODE_STATE[st.state][0]}</span>
+                {st.state === "ok" && (
+                  <span className="ai-count">
+                    {rows.filter((e) => e.enabled).length}/{rows.length} model açık
+                  </span>
                 )}
-                <div className="ai-note">
-                  Düşünen Claude Code'dur; komutları, dosyaları ve ekranı yine ADA'nın araçları yönetir (onaylar ve işlem günlüğü aynen geçerlidir).
-                </div>
-                {claudeCodeEngines.map((e) => (
-                  <EngineRow key={e.id} e={e} onToggle={toggle} onTest={testEngine} test={tests[e.id]} />
-                ))}
+                <span className="ai-caret">{open["_" + a.key] ? "▾" : "▸"}</span>
               </div>
-            )}
-          </div>
-        )}
+              {open["_" + a.key] && (
+                <div className="ai-card-body">
+                  {st.detail && <div className="ai-note">{st.detail}</div>}
+                  {st.state === "missing" && <div className="ai-note">{a.install}</div>}
+                  <div className="ai-note">
+                    Düşünen {a.name}'dur; komutları, dosyaları ve ekranı yine ADA'nın araçları yönetir (onaylar ve işlem günlüğü aynen geçerlidir).
+                  </div>
+                  {a.warn && <div className="ai-note warn">{a.warn}</div>}
+                  {rows.map((e) => (
+                    <EngineRow key={e.id} e={e} onToggle={toggle} onTest={testEngine} test={tests[e.id]} />
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
         {ai.cloud.map((c) => {
           const rows = ai.engines.filter((e) => e.provider === c.id);
           const st = CLOUD_STATE[c.status?.state];

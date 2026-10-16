@@ -27,7 +27,7 @@ ADA is an autonomous AI worker that runs on your own computer. Describe a job �
 
 <p align="center"><img src="docs/images/key-step.png" alt="Pasting the AI key during setup" width="520"></p>
 
-No key? ADA also works with local models: install [Ollama](https://ollama.com), pull a model, and ADA finds it by itself. You can add more providers (Claude, OpenAI, Groq and others) later in **Settings → AI**.
+No key? ADA also works with local models: install [Ollama](https://ollama.com), pull a model, and ADA finds it by itself. You can add more providers (Claude, OpenAI, Groq and others) later in **Settings → AI**. If [OpenCode](https://opencode.ai) is installed (`npm install -g opencode-ai`), ADA can also use its free models with no account; turn them on in **Settings → AI → OpenCode**.
 
 **3. Give it a job.** Type what you need in plain language, for example:
 

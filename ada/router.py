@@ -407,9 +407,13 @@ async def _run_engine(
     from .providers.qwen_fallback import to_gemini, to_openai
     from .providers.selfhost import Endpoint, selfhost_loop
 
-    if eng.family == "claudecode":
-        # Bu bilgisayardaki Claude Code (abonelik oturumu): düşünen o, araçları çalıştıran yine ADA
-        from .providers.claude_code import claude_code_loop
+    if eng.family in ("claudecode", "opencode"):
+        # Bu bilgisayardaki kodlama ajanı (Claude Code aboneliği / OpenCode'un bağlı sağlayıcıları):
+        # düşünen o, araçları çalıştıran yine ADA
+        if eng.family == "claudecode":
+            from .providers.claude_code import claude_code_loop as agent_loop
+        else:
+            from .providers.opencode import opencode_loop as agent_loop
 
         cc = to_openai(messages, eng.vision)
         cc_g, cc_o = len(messages), len(cc)
@@ -418,8 +422,8 @@ async def _run_engine(
             messages[cc_g:] = to_gemini(cc[cc_o:])
             save()
 
-        async for ev in claude_code_loop(cc, system=system, tools=tools, ui_entry=ui_entry, save=cc_sync,
-                                         max_steps=max_steps, model=eng.model):
+        async for ev in agent_loop(cc, system=system, tools=tools, ui_entry=ui_entry, save=cc_sync,
+                                   max_steps=max_steps, model=eng.model):
             yield ev
         return
 
@@ -686,7 +690,7 @@ async def discovery_loop() -> None:
                 await engines.scan_all()
             else:
                 await engines.scan_local()
-                await engines.scan_claude_code()  # sonradan kurulmuş ya da oturumu açılmış olabilir
+                await engines.scan_agents()  # Claude Code / OpenCode sonradan kurulmuş ya da oturumu açılmış olabilir
         except Exception:  # noqa: BLE001 - tarama hatası ADA'yı durdurmasın
             pass
         try:

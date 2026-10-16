@@ -46,6 +46,7 @@ class Provider:
     token_param: str = "max_tokens"
     fallback_models: tuple[str, ...] = ()
     note: str = ""
+    models_url: str = ""  # model listesi base_url + "/models" dışında bir yerdeyse
 
 
 CLOUD: list[Provider] = [
@@ -70,6 +71,10 @@ CLOUD: list[Provider] = [
              "https://openrouter.ai/keys", note="Tek anahtarla birçok aile"),
     Provider("together", "Together AI", "openai", "https://api.together.xyz/v1", "TOGETHER_API_KEY",
              "https://api.together.ai/settings/api-keys", max_tokens=8192),
+    # Yalnızca Chat Completions ucundaki modeller alınır (bkz. _ZEN_OTHER); ücretsizler OpenCode dışında çalışmaz
+    Provider("zen", "OpenCode Zen", "openai", "https://opencode.ai/inference/openai/v1", "OPENCODE_API_KEY",
+             "https://opencode.ai/console", max_tokens=8192, models_url="https://opencode.ai/inference/v1/models",
+             fallback_models=("kimi-k3", "glm-5.3", "deepseek-v4-pro"), note="Kodlama için seçilmiş modeller"),
 ]
 
 # Yerel sunucular: (kimlik, ad, kök adres, OpenAI uyumlu yol)
@@ -97,6 +102,9 @@ _NOT_CHAT = re.compile(
     r"aqa|babbage|davinci|guard|ocr|live|native-audio|computer-use|robotics|learnlm|search-preview|sora|codex-mini",
     re.I,
 )
+# Zen'de Chat Completions dışında bir uçtan (Responses, Messages, Gemini, SystemOne) sunulanlar ve
+# yalnızca OpenCode'un kendi arayüzünde çalışan ücretsiz modeller
+_ZEN_OTHER = re.compile(r"^(claude|gpt|gemini|grok|muse|jev|test$)|-backup$|-free$|^big-pickle$", re.I)
 
 
 def api_key(provider_id: str) -> str:
@@ -156,6 +164,8 @@ class Engine:
 # Claude Code: bu bilgisayarda kurulu `claude` komutu; anahtar yerine açık oturumu (aboneliği) kullanır.
 # Katalogda (PROVIDERS) yer almaz çünkü ne anahtarı ne adresi vardır (bkz. providers/claude_code.py).
 CLAUDE_CODE = "claudecode"
+# OpenCode: bu bilgisayarda kurulu `opencode` komutu; OpenCode'da bağlı sağlayıcıları kullanır (bkz. providers/opencode.py)
+OPENCODE = "opencode"
 
 
 def is_passive(provider: str, model: str = "") -> bool:
@@ -168,6 +178,8 @@ def provider_label(pid: str) -> str:
         return PROVIDERS[pid].label
     if pid == CLAUDE_CODE:
         return "Claude Code (abonelik)"
+    if pid == OPENCODE:
+        return "OpenCode (CLI)"
     c = _custom(pid)
     return c["label"] if c else pid
 
@@ -335,8 +347,8 @@ def all_engines() -> list[Engine]:
 
 
 def _is_available(e: Engine, state: dict) -> bool:
-    if e.provider == CLAUDE_CODE:
-        return state["cloud_status"].get(CLAUDE_CODE, {}).get("state") == "ok"
+    if e.provider in (CLAUDE_CODE, OPENCODE):
+        return state["cloud_status"].get(e.provider, {}).get("state") == "ok"
     if e.local:
         st = state["local_status"].get(e.provider, {}).get("state")
         if e.provider in PROVIDERS:
@@ -573,12 +585,12 @@ async def list_cloud(pid: str) -> list[Engine]:
         headers = {"Authorization": f"Bearer {key}"}
         if pid == "anthropic":
             headers.update({"x-api-key": key, "anthropic-version": "2023-06-01"})
-        data = await _get_json(client, p.base_url.rstrip("/") + "/models", headers=headers)
+        data = await _get_json(client, p.models_url or p.base_url.rstrip("/") + "/models", headers=headers)
         rows = data.get("data", data if isinstance(data, list) else [])
         out = []
         for m in rows:
             mid = m.get("id") if isinstance(m, dict) else None
-            if not mid or _NOT_CHAT.search(mid):
+            if not mid or _NOT_CHAT.search(mid) or (pid == "zen" and _ZEN_OTHER.search(mid)):
                 continue
             vision = tools = None
             if pid == "openrouter":
@@ -684,8 +696,22 @@ async def scan_claude_code() -> dict:
     return st
 
 
+async def scan_opencode() -> dict:
+    """OpenCode kurulu mu, bağlı sağlayıcısı var mı? Varsa modelleri motor olarak eklenir."""
+    from .providers import opencode
+
+    st, found = await opencode.scan()
+    _merge(found, cloud_status={OPENCODE: st}, drop_missing={OPENCODE})
+    return st
+
+
+async def scan_agents() -> None:
+    """Bu bilgisayardaki kodlama ajanları (Claude Code, OpenCode)."""
+    await asyncio.gather(scan_claude_code(), scan_opencode())
+
+
 async def scan_all() -> None:
-    await asyncio.gather(scan_local(), scan_cloud(), scan_claude_code())
+    await asyncio.gather(scan_local(), scan_cloud(), scan_agents())
 
 
 # ---------------------------------------------------------------- yerel sunucuyu başlatma

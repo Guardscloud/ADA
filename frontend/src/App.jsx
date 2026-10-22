@@ -16,6 +16,7 @@ import ControlMenu from "./components/ControlMenu";
 import SetupWizard from "./components/SetupWizard";
 import UpdatePanel from "./components/UpdatePanel";
 import SupportPanel from "./components/SupportPanel";
+import InstallerPanel from "./components/InstallerPanel";
 
 const blankAssistant = () => ({ role: "assistant", text: "", steps: [], files: [], approvals: [], thinking: "", screenshot: null });
 
@@ -40,6 +41,7 @@ export default function App() {
   const [showWatch, setShowWatch] = useState(false);
   const [showUpdate, setShowUpdate] = useState(false);
   const [showSupport, setShowSupport] = useState(false);
+  const [installer, setInstaller] = useState(null); // /d komutu: {mode, query, autoStart}
   const [watch, setWatch] = useState(null);
   const [terminals, setTerminals] = useState(null);
   const [voiceOn, setVoiceOn] = useState(() => {
@@ -376,13 +378,28 @@ export default function App() {
           status={status}
           onOpenSettings={() => setShowSettings(true)}
         />
-        <Composer onSend={send} disabled={running} prefill={prefill} onPrefillUsed={() => setPrefill("")} />
+        <Composer
+          onSend={send}
+          onCommand={(c) => setInstaller({ mode: c.action, query: c.query, autoStart: c.action === "update", key: Date.now() })}
+          disabled={running} prefill={prefill} onPrefillUsed={() => setPrefill("")} />
       </main>
       {status?.setup_needed && <SetupWizard onDone={refreshLists} />}
       {showSafety && <SafetyPanel onClose={() => setShowSafety(false)} usage={status?.usage} />}
       {showSettings && <SettingsPanel onClose={() => setShowSettings(false)} />}
       {showHelp && <HelpPanel onClose={() => setShowHelp(false)} />}
       {showSupport && <SupportPanel onClose={() => setShowSupport(false)} />}
+      {installer && (
+        <InstallerPanel
+          key={installer.key}
+          mode={installer.mode}
+          query={installer.query}
+          autoStart={installer.autoStart}
+          onClose={() => {
+            setInstaller(null);
+            refreshLists();
+          }}
+        />
+      )}
       {showUpdate && (
         <UpdatePanel
           onClose={() => {

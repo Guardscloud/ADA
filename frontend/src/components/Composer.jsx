@@ -8,7 +8,23 @@ const DICTATION_HINT = isMac
   ? "macOS dikte özelliğini de kullanabilirsiniz: metin kutusuna tıklayıp Fn (🌐) tuşuna iki kez basın."
   : "Windows'un sesle yazma özelliğini de kullanabilirsiniz: metin kutusuna tıklayıp Windows + H tuşlarına basın.";
 
-export default function Composer({ onSend, disabled, prefill, onPrefillUsed }) {
+// Sohbet kutusu komutları: model çağrılmadan arayüzde karşılanır
+const COMMANDS = [
+  { cmd: "/d", fill: "/d", label: "Program kur", desc: "Kurulum penceresini açar" },
+  { cmd: "/d <program>", fill: "/d ", label: "Ara ve kur", desc: "ör. /d vlc" },
+  { cmd: "/d update", fill: "/d update", label: "Her şeyi güncelle", desc: "Tüm programlar ve ADA" },
+];
+
+/** "/d", "/d vlc", "/d update" → {action, query}; komut değilse null. */
+export function parseSlash(text) {
+  const m = /^\s*\/d(?:\s+([\s\S]*))?$/i.exec(text || "");
+  if (!m) return null;
+  const rest = (m[1] || "").trim();
+  if (/^(update|upgrade|güncelle|guncelle|u)$/i.test(rest)) return { action: "update", query: "" };
+  return { action: "install", query: rest.slice(0, 80) };
+}
+
+export default function Composer({ onSend, onCommand, disabled, prefill, onPrefillUsed }) {
   const [text, setText] = useState("");
   const [attachments, setAttachments] = useState([]);
   const area = useRef(null);
@@ -87,7 +103,14 @@ export default function Composer({ onSend, disabled, prefill, onPrefillUsed }) {
 
   const submit = async () => {
     const t = text.trim();
-    if (!t || disabled) return;
+    if (!t) return;
+    const slash = onCommand && parseSlash(t);
+    if (slash) {
+      onCommand(slash);
+      setText("");
+      return;
+    }
+    if (disabled) return;
     const ok = await onSend(t, attachments);
     if (ok !== false) {
       setText("");
@@ -122,6 +145,29 @@ export default function Composer({ onSend, disabled, prefill, onPrefillUsed }) {
             ))}
           </div>
         )}
+        {onCommand && /^\/\S*$/.test(text) && !text.startsWith("/d ") && (
+          <div className="slash-menu" role="listbox">
+            {COMMANDS.filter((c) => c.fill.trim().startsWith(text.trim()) || text === "/").map((c) => (
+              <button
+                key={c.cmd}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  if (c.fill.endsWith(" ")) {
+                    setText(c.fill);
+                    area.current?.focus();
+                  } else {
+                    onCommand(parseSlash(c.fill));
+                    setText("");
+                  }
+                }}
+              >
+                <code data-no-i18n>{c.cmd}</code>
+                <b>{c.label}</b>
+                <span>{c.desc}</span>
+              </button>
+            ))}
+          </div>
+        )}
         <div className="composer">
           <textarea
             ref={area}
@@ -150,7 +196,7 @@ export default function Composer({ onSend, disabled, prefill, onPrefillUsed }) {
               {mic === "busy" ? <LoaderCircle size={18} className="spin" /> : <Mic size={18} />}
             </button>
             <span className="hint">Enter gönderir · Shift+Enter yeni satır · Fareyi sol üst köşeye götürmek ekran kontrolünü durdurur</span>
-            <button id="sendBtn" onClick={submit} disabled={disabled || !text.trim()} title="Gönder">
+            <button id="sendBtn" onClick={submit} disabled={(disabled && !parseSlash(text)) || !text.trim()} title="Gönder">
               <ArrowUp size={18} strokeWidth={2.5} />
             </button>
           </div>

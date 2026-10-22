@@ -22,7 +22,7 @@ from fastapi import FastAPI, File, HTTPException, Request, UploadFile, WebSocket
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel, ValidationError
 
-from . import approval, config, goals, router, routines, runtime, safety, scheduler, settings, skills, store, terminal, tor, triggers, updater, watchdog
+from . import approval, config, goals, installer, router, routines, runtime, safety, scheduler, settings, skills, store, terminal, tor, triggers, updater, watchdog
 from .agent import dumps
 from .runtime import RUNS
 from .tools import REGISTRY, ToolError, safe_path
@@ -897,18 +897,117 @@ async def update_install(request: Request):
     _guard(request)
     if any(not r.done for r in RUNS.values()):
         raise HTTPException(409, "Çalışan görevler var; bitmelerini bekleyin veya durdurun.")
-
-    def close_app() -> None:
-        # Kurulum dosyaları değiştirebilsin diye hemen çıkılır (kurulum ADA'yı yeniden açar)
-        safety.log("güncelleme", {"sürüm": updater.status()["latest"]}, ok=True)
-        terminal.kill_all()
-        os._exit(0)
-
     try:
-        updater.start_install(close_app)
+        updater.start_install(_close_for_update)
     except updater.UpdateError as e:
         raise HTTPException(400, str(e))
     return updater.status()
+
+
+def _close_for_update() -> None:
+    # Kurulum dosyaları değiştirebilsin diye hemen çıkılır (kurulum ADA'yı yeniden açar)
+    safety.log("güncelleme", {"sürüm": updater.status()["latest"]}, ok=True)
+    terminal.kill_all()
+    os._exit(0)
+
+
+async def _self_update() -> dict:
+    """/d update'in son adımı: ADA'nın yeni sürümü varsa indirip kurar (ADA kapanıp yeniden açılır)."""
+    st = await updater.check()
+    if not st.get("source"):
+        return {"state": "skipped", "message": "ADA güncelleme adresi ayarlı değil (Ayarlar → Genel)."}
+    if st.get("error"):
+        return {"state": "error", "message": "ADA güncellemesi denetlenemedi: " + st["error"]}
+    if not st.get("available"):
+        return {"state": "current", "message": f"ADA güncel (sürüm {st['current']})."}
+    if not st.get("can_install"):
+        return {"state": "manual", "version": st["latest"],
+                "message": f"ADA {st['latest']} çıktı; bu kurulum kendini güncelleyemiyor, sürümler sayfasından indirin."}
+    if any(not r.done for r in RUNS.values()):
+        return {"state": "later", "version": st["latest"],
+                "message": f"ADA {st['latest']} hazır; çalışan görevler bitince Kontrol → Güncelleme'den tek tıkla kurun."}
+    try:
+        updater.start_install(_close_for_update)
+    except updater.UpdateError as e:
+        return {"state": "error", "message": f"ADA {st['latest']} kurulamadı: {e}"}
+    return {"state": "installing", "version": st["latest"],
+            "message": f"ADA {st['latest']} indiriliyor; kurulumdan sonra ADA kendiliğinden yeniden açılacak."}
+
+
+# ---------------------------------------------------------------- kurulum merkezi (/d komutu)
+
+class InstallIn(BaseModel):
+    items: list[dict]
+
+
+def _installer_call(fn, *a):
+    try:
+        return fn(*a)
+    except installer.InstallerError as e:
+        raise HTTPException(409, str(e))
+
+
+@app.get("/api/installer")
+async def installer_state():
+    return {"info": installer.info(), "job": installer.current()}
+
+
+@app.get("/api/installer/catalog")
+async def installer_catalog():
+    return await installer.catalog()
+
+
+@app.get("/api/installer/search")
+async def installer_search(q: str = ""):
+    try:
+        return await installer.search(q)
+    except installer.InstallerError as e:
+        raise HTTPException(400, str(e))
+
+
+@app.get("/api/installer/upgrades")
+async def installer_upgrades():
+    try:
+        return await installer.upgrades()
+    except installer.InstallerError as e:
+        raise HTTPException(400, str(e))
+
+
+@app.post("/api/installer/install")
+async def installer_install(request: Request):
+    _guard(request)
+    body = await _json_body(request, InstallIn)
+    return _installer_call(installer.start_install, body.items)
+
+
+@app.post("/api/installer/update")
+async def installer_update(request: Request):
+    _guard(request)
+    return _installer_call(installer.start_update, _self_update if updater.source() else None)
+
+
+@app.post("/api/installer/cancel")
+async def installer_cancel(request: Request):
+    _guard(request)
+    return {"ok": installer.cancel()}
+
+
+@app.get("/api/installer/job")
+async def installer_job():
+    return installer.current() or {}
+
+
+@app.post("/api/installer/open-store")
+async def installer_open_store(request: Request):
+    """winget yoksa Microsoft Store'da 'Uygulama Yükleyici' sayfasını açar."""
+    _guard(request)
+    if not config.IS_WIN:
+        raise HTTPException(400, "Yalnızca Windows'ta.")
+    try:
+        os.startfile(installer.WINGET_STORE_URL)  # type: ignore[attr-defined]
+    except OSError as e:
+        raise HTTPException(500, f"Store açılamadı: {e}")
+    return {"ok": True}
 
 
 # ---------------------------------------------------------------- güvenlik

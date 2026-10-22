@@ -13,6 +13,10 @@ import tempfile
 from types import SimpleNamespace as NS
 
 _TMP = tempfile.mkdtemp(prefix="ada-test-")
+# Testler ADA'nın içinden (ör. run_shell) çalıştırılınca kullanıcının ayarları (ADA_WATCH=false vb.) ortamdan
+# sızar ve sonucu değiştirir; ana makineden gelen ADA_* değişkenleri temizlenir, gerekenler aşağıda verilir.
+for _k in [k for k in os.environ if k.startswith("ADA_")]:
+    del os.environ[_k]
 os.environ.update({
     "ADA_HOME": _TMP,
     "ADA_WORKSPACE": os.path.join(_TMP, "workspace"),
@@ -26,6 +30,7 @@ os.environ.update({
     "ADA_ENABLE_MAC_APPS": "false",
     "ADA_NO_DISCOVERY": "1",  # yerel model/bulut taraması testlerde çalışmaz
     "ADA_TOR": "false",  # testler Tor indirmesin/başlatmasın (test_tor.py ayrıca açar)
+    "ADA_PASSWORD": "",  # kullanıcının parolası testlerde girişi zorunlu kılmasın
 })
 
 import pytest  # noqa: E402

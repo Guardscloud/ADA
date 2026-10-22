@@ -13,10 +13,31 @@ const COMMANDS = [
   { cmd: "/d", fill: "/d", label: "Program kur", desc: "Kurulum penceresini açar" },
   { cmd: "/d <program>", fill: "/d ", label: "Ara ve kur", desc: "ör. /d vlc" },
   { cmd: "/d update", fill: "/d update", label: "Her şeyi güncelle", desc: "Tüm programlar ve ADA" },
+  { cmd: "update", fill: "/update", label: "Programları güncelle", desc: "Kurulu programları görüp seçerek güncelle" },
 ];
+
+// Mesajın tamamı bu kelimelerden biriyse (dil fark etmeksizin) elle güncelleme penceresi açılır
+const UPDATE_WORDS = new Set([
+  "update", "updates", "upgrade", "/update", "/u",
+  "güncelle", "guncelle", "güncelleme", "guncelleme", "güncellemeler",
+  "aktualisieren", "aktualisierung", "aktualisierungen",
+  "actualizar", "actualiza", "actualización", "actualizacion", "actualizaciones",
+  "mettre à jour", "mettre a jour", "mise à jour", "mise a jour", "mises à jour", "maj",
+  "aggiorna", "aggiornare", "aggiornamento", "aggiornamenti",
+  "atualizar", "atualiza", "atualização", "atualizacao", "atualizações",
+  "обновить", "обнови", "обновление", "обновления",
+  "更新", "升级", "升級", "アップデート", "更新する", "アップグレード",
+  "bijwerken", "aktualizuj", "aktualizacja", "تحديث", "업데이트", "अपडेट",
+]);
+
+export function isUpdateWord(text) {
+  const t = (text || "").trim().replace(/[\s.!?。！？]+$/u, "").toLocaleLowerCase();
+  return UPDATE_WORDS.has(t) || UPDATE_WORDS.has(t.toLowerCase());
+}
 
 /** "/d", "/d vlc", "/d update" → {action, query}; komut değilse null. */
 export function parseSlash(text) {
+  if (isUpdateWord(text)) return { action: "update", query: "", manual: true };
   const m = /^\s*\/d(?:\s+([\s\S]*))?$/i.exec(text || "");
   if (!m) return null;
   const rest = (m[1] || "").trim();

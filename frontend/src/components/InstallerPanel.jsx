@@ -4,6 +4,7 @@ import { api } from "../api";
 
 // Kurulum merkezi (/d komutu): hazır katalogdan ya da winget aramasından program seçip sessizce kurar;
 // "/d update" ile güncellemesi olan tüm programları ve en sonda ADA'nın kendisini günceller.
+// Tek başına "update" (her dilde: güncelle, actualizar, обновить, 更新…) kurulu programları gösterir; kullanıcı seçip elle günceller.
 
 const post = (path, body) => api(path, { method: "POST", body: body ? JSON.stringify(body) : undefined });
 
@@ -121,6 +122,10 @@ export default function InstallerPanel({ mode = "install", query = "", autoStart
   const [picked, setPicked] = useState({}); // id → {id, name, note}
   const [ups, setUps] = useState(null);
   const [adaUp, setAdaUp] = useState(null);
+  const [sel, setSel] = useState({}); // elle güncelleme seçimi: id → program
+  const [adaSel, setAdaSel] = useState(false);
+  const [filter, setFilter] = useState("");
+  const [showAll, setShowAll] = useState(false);
   const started = useRef(false);
   const gone = useRef(0);
 
@@ -160,7 +165,7 @@ export default function InstallerPanel({ mode = "install", query = "", autoStart
   // Güncelleme sekmesi: liste + ADA sürümü
   useEffect(() => {
     if (!info?.available || tab !== "update" || ups || running) return;
-    api("/api/installer/upgrades").then(setUps).catch((e) => setError(e.message));
+    api("/api/installer/installed").then(setUps).catch((e) => setError(e.message));
     api("/api/update").then(setAdaUp).catch(() => {});
   }, [info, tab, ups, running]);
 
@@ -236,13 +241,39 @@ export default function InstallerPanel({ mode = "install", query = "", autoStart
     return g;
   }, [catalog]);
   const pickedList = Object.values(picked);
+  const shown = useMemo(() => {
+    const f = filter.trim().toLowerCase();
+    return (ups || []).filter((u) => !f || u.name.toLowerCase().includes(f) || u.id.toLowerCase().includes(f));
+  }, [ups, filter]);
+  const withUp = shown.filter((u) => u.available);
+  const others = shown.filter((u) => !u.available);
+  const selList = Object.values(sel);
+  const allSel = withUp.length > 0 && withUp.every((u) => sel[u.id]);
+  const toggleSel = (u) =>
+    setSel((prev) => {
+      const next = { ...prev };
+      if (next[u.id]) delete next[u.id];
+      else next[u.id] = u;
+      return next;
+    });
+
+  async function startUpgrade(items, ada) {
+    setError("");
+    try {
+      setJob(await post("/api/installer/upgrade", { items: items.map(({ id, name, version, available }) => ({ id, name, version, available })), ada }));
+      setSel({});
+      setAdaSel(false);
+    } catch (e) {
+      setError(e.message);
+    }
+  }
 
   return (
     <div className="modal-bg" onClick={running ? undefined : onClose}>
       <div className="modal installer" onClick={(e) => e.stopPropagation()}>
         <div className="modal-head">
           <b>Kurulum merkezi</b>
-          <span className="muted small ins-cmd">/d · /d &lt;program&gt; · /d update</span>
+          <span className="muted small ins-cmd" data-no-i18n>/d · /d &lt;program&gt; · update</span>
           {!running && (
             <button className="close" onClick={onClose}>
               ✕
@@ -276,7 +307,7 @@ export default function InstallerPanel({ mode = "install", query = "", autoStart
                 <Download size={15} /> Program kur
               </button>
               <button className={tab === "update" ? "on" : ""} onClick={() => setTab("update")}>
-                <RefreshCw size={15} /> Her şeyi güncelle
+                <RefreshCw size={15} /> Güncelle
               </button>
             </div>
 
@@ -363,40 +394,90 @@ export default function InstallerPanel({ mode = "install", query = "", autoStart
               </div>
             ) : (
               <div className="ins-body">
+                <form className="ins-search" onSubmit={(e) => e.preventDefault()}>
+                  <Search size={16} />
+                  <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Kurulu programlarda ara…" />
+                  <button type="button" className="setup-btn" title="Listeyi yenile" onClick={() => { setUps(null); setSel({}); }} disabled={!ups}>
+                    <RefreshCw size={15} />
+                  </button>
+                </form>
                 <div className="ins-scroll">
                   {adaUp && (
-                    <div className={"ins-ada" + (adaUp.available ? " new" : "")}>
+                    <label className={"ins-ada" + (adaUp.available ? " new" : "")}>
+                      {adaUp.available && <input type="checkbox" checked={adaSel} onChange={() => setAdaSel(!adaSel)} />}
                       <b>ADA</b> {adaUp.current}
-                      {adaUp.available ? ` → ${adaUp.latest} (en son kurulur, ADA yeniden açılır)` : " · güncel"}
-                    </div>
+                      {adaUp.available ? ` → ${adaUp.latest} (seçerseniz en son kurulur, ADA yeniden açılır)` : " · güncel"}
+                    </label>
                   )}
                   {!ups ? (
                     <div className="muted">
-                      <LoaderCircle size={14} className="spin" /> Güncellemeler aranıyor…
-                    </div>
-                  ) : ups.length === 0 ? (
-                    <div className="update-ok">
-                      <CheckCircle2 size={18} /> Tüm programlar güncel.
+                      <LoaderCircle size={14} className="spin" /> Kurulu programlar okunuyor…
                     </div>
                   ) : (
-                    <ul className="ins-items">
-                      {ups.map((u) => (
-                        <li key={u.id} className="ins-row">
-                          <RefreshCw size={14} className="ins-i wait" />
-                          <span className="ins-name">{u.name}</span>
-                          <span className="ins-msg" data-no-i18n>
-                            {u.version} → {u.available}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
+                    <>
+                      <section>
+                        <h4>
+                          Güncellemesi olanlar · {withUp.length}
+                          {withUp.length > 0 && (
+                            <button className="ins-link" onClick={() => setSel(allSel ? {} : Object.fromEntries(withUp.map((u) => [u.id, u])))}>
+                              {allSel ? "Seçimi kaldır" : "Tümünü seç"}
+                            </button>
+                          )}
+                        </h4>
+                        {withUp.length === 0 ? (
+                          <div className="update-ok">
+                            <CheckCircle2 size={18} /> Tüm programlar güncel.
+                          </div>
+                        ) : (
+                          <ul className="ins-items">
+                            {withUp.map((u) => (
+                              <li key={u.id} className={"ins-row flat pick" + (sel[u.id] ? " on" : "")}>
+                                <input type="checkbox" checked={!!sel[u.id]} onChange={() => toggleSel(u)} />
+                                <span className="ins-name" onClick={() => toggleSel(u)}>{u.name}</span>
+                                <span className="ins-msg" data-no-i18n>
+                                  {u.version} → {u.available}
+                                </span>
+                                <button className="setup-btn ins-up" onClick={() => startUpgrade([u], false)}>
+                                  Güncelle
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </section>
+                      <section>
+                        <h4>
+                          Diğer kurulu programlar · {others.length}
+                          <button className="ins-link" onClick={() => setShowAll(!showAll)}>
+                            {showAll ? "Gizle" : "Göster"}
+                          </button>
+                        </h4>
+                        {showAll && (
+                          <ul className="ins-items">
+                            {others.map((u) => (
+                              <li key={u.id} className="ins-row flat">
+                                <CheckCircle2 size={14} className={"ins-i " + (u.managed ? "cur" : "wait")} />
+                                <span className="ins-name">{u.name}</span>
+                                <span className="ins-msg" data-no-i18n>{u.version}</span>
+                                <span className="ins-state">{u.managed ? "Güncel" : "winget dışı"}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </section>
+                    </>
                   )}
                 </div>
                 {error && <div className="setup-error">{error}</div>}
                 <div className="update-foot">
-                  <span className="muted small">Açık programlar güncellenemeyebilir; mümkünse kapatın.</span>
-                  <button className="setup-btn primary" onClick={startUpdate} disabled={!ups || (ups.length === 0 && !adaUp?.available)}>
-                    <RefreshCw size={15} /> Hepsini güncelle
+                  <span className="muted small">
+                    {selList.length || adaSel ? `${selList.length + (adaSel ? 1 : 0)} seçildi · açık programları kapatın` : "Güncellemek istediklerinizi işaretleyin"}
+                  </span>
+                  <button className="setup-btn" onClick={startUpdate} disabled={!ups || (withUp.length === 0 && !adaUp?.available)} title="Hepsini sırayla günceller (ADA dahil)">
+                    Hepsini güncelle
+                  </button>
+                  <button className="setup-btn primary" disabled={!selList.length && !adaSel} onClick={() => startUpgrade(selList, adaSel)}>
+                    <RefreshCw size={15} /> Seçilenleri güncelle
                   </button>
                 </div>
               </div>

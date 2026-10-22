@@ -798,3 +798,16 @@ a.setup-btn.disabled { opacity: .55; pointer-events: none; }
 .ins-setup { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; margin-top: 16px; font-size: 14px; }
 .ins-setup svg { color: var(--accent); }
 .ins-setup ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; line-height: 1.5; }
+
+/* elle güncelleme (update) */
+.ins-link { margin-left: 10px; background: none; border: 0; color: var(--accent); font-size: 12px; cursor: pointer; padding: 0; }
+.ins-link:hover { text-decoration: underline; }
+.ins-row.pick { cursor: default; }
+.ins-row.pick .ins-name { cursor: pointer; }
+.ins-row.pick.on { background: var(--accent-soft); }
+.ins-row input[type=checkbox], .ins-ada input[type=checkbox] { accent-color: var(--accent); margin: 0 4px 0 0; }
+.setup-btn.ins-up { padding: 3px 10px; font-size: 12px; min-height: 0; white-space: nowrap; }
+.ins-row.flat { grid-template-columns: 18px minmax(120px, 1fr) auto auto; }
+.ins-row.flat .ins-msg { grid-column: auto; white-space: nowrap; }
+.ins-row.flat .ins-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+label.ins-ada { display: flex; align-items: center; gap: 6px; cursor: pointer; }

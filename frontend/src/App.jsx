@@ -380,7 +380,7 @@ export default function App() {
         />
         <Composer
           onSend={send}
-          onCommand={(c) => setInstaller({ mode: c.action, query: c.query, autoStart: c.action === "update", key: Date.now() })}
+          onCommand={(c) => setInstaller({ mode: c.action, query: c.query, autoStart: c.action === "update" && !c.manual, key: Date.now() })}
           disabled={running} prefill={prefill} onPrefillUsed={() => setPrefill("")} />
       </main>
       {status?.setup_needed && <SetupWizard onDone={refreshLists} />}

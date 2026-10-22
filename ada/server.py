@@ -986,6 +986,28 @@ async def installer_update(request: Request):
     return _installer_call(installer.start_update, _self_update if updater.source() else None)
 
 
+@app.get("/api/installer/installed")
+async def installer_installed():
+    """Kurulu programlar ve güncellemeleri (elle güncelleme penceresi)."""
+    try:
+        return await installer.installed()
+    except installer.InstallerError as e:
+        raise HTTPException(400, str(e))
+
+
+class UpgradeIn(BaseModel):
+    items: list[dict] = []
+    ada: bool = False
+
+
+@app.post("/api/installer/upgrade")
+async def installer_upgrade(request: Request):
+    """Yalnızca kullanıcının seçtiği programları günceller; ada=True ise en sonda ADA da güncellenir."""
+    _guard(request)
+    body = await _json_body(request, UpgradeIn)
+    return _installer_call(installer.start_upgrade, body.items, _self_update if body.ada and updater.source() else None)
+
+
 @app.post("/api/installer/cancel")
 async def installer_cancel(request: Request):
     _guard(request)

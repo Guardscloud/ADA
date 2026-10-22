@@ -278,6 +278,30 @@ async def installed_ids(max_age: float = 300) -> set[str]:
     return ids
 
 
+async def installed() -> list[dict]:
+    """Kurulu programlar (winget list): ad, kimlik, sürüm, varsa yeni sürüm. managed=winget ile güncellenebilir.
+
+    Güncellemesi olanlar başta, sonra ada göre sıralanır. Elle güncelleme penceresi ("update") bunu gösterir.
+    """
+    global _installed_cache
+    _code, out = await _winget(["list", *COMMON], timeout=120)
+    rows = parse_table(out)
+    _installed_cache = (time.monotonic(), {r["id"].lower() for r in rows})
+    seen, items = set(), []
+    for r in rows:
+        key = r["id"].lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        src = r.get("source", "").lower()
+        managed = src == "winget" and valid_id(r["id"]) and "…" not in r["id"]
+        avail = r.get("available", "") if managed else ""
+        items.append({"id": r["id"], "name": r["name"], "version": r.get("version", ""), "available": avail,
+                      "source": r.get("source", ""), "managed": managed})
+    items.sort(key=lambda x: (not x["available"], not x["managed"], x["name"].lower()))
+    return items
+
+
 async def catalog() -> list[dict]:
     have = await installed_ids() if winget_path() else set()
     return [{**c, "note": c.get("note", ""), "installed": c["id"].lower() in have} for c in CATALOG]
@@ -464,6 +488,46 @@ def start_update(self_update=None) -> dict:
     return JOB.public()
 
 
+async def _job_upgrade_selected(job: Job, self_update) -> None:
+    job.phase = "working"
+    for it in job.items:
+        ver = it["message"]
+        await _run_package(job, it, "upgrade")
+        if it["state"] == "updated":
+            it["message"] = ver
+    if self_update:
+        job.phase = "self_update"
+        job.current = "ADA"
+        job.add_log("ADA'nın yeni sürümü denetleniyor…")
+        job.self_update = await self_update()
+        job.add_log(job.self_update.get("message", ""))
+
+
+def start_upgrade(items: list[dict], self_update=None) -> dict:
+    """Kullanıcının elle seçtiği programları günceller; self_update verilirse en sonda ADA da güncellenir."""
+    global JOB
+    _busy()
+    clean, seen = [], set()
+    for it in items or []:
+        pid = str(it.get("id", "")).strip()
+        if not valid_id(pid):
+            raise InstallerError(f"Geçersiz paket kimliği: {pid[:60]}")
+        if pid.lower() in seen:
+            continue
+        seen.add(pid.lower())
+        ver = " → ".join(v for v in (str(it.get("version") or "")[:40], str(it.get("available") or "")[:40]) if v)
+        clean.append({"id": pid, "name": str(it.get("name") or pid)[:120], "ver": ver})
+    if not clean and not self_update:
+        raise InstallerError("Güncellenecek program seçilmedi.")
+    if len(clean) > 100:
+        raise InstallerError("Tek seferde en fazla 100 program güncellenebilir.")
+    JOB = Job("update", clean)
+    for it, src in zip(JOB.items, clean):
+        it["message"] = src["ver"]
+    JOB.task = asyncio.create_task(_wrap(JOB, _job_upgrade_selected(JOB, self_update)))
+    return JOB.public()
+
+
 def cancel() -> bool:
     if JOB and JOB.running and JOB.task:
         JOB.task.cancel()
@@ -471,8 +535,30 @@ def cancel() -> bool:
     return False
 
 
+# Mesajın tamamı bu kelimelerden biriyse (dil fark etmeksizin) elle güncelleme penceresi açılır
+UPDATE_WORDS = {
+    "update", "updates", "upgrade", "/update", "/u",
+    "güncelle", "guncelle", "güncelleme", "guncelleme", "güncellemeler", "güncelle!",
+    "aktualisieren", "aktualisierung", "aktualisierungen",
+    "actualizar", "actualiza", "actualización", "actualizacion", "actualizaciones",
+    "mettre à jour", "mettre a jour", "mise à jour", "mise a jour", "mises à jour", "maj",
+    "aggiorna", "aggiornare", "aggiornamento", "aggiornamenti",
+    "atualizar", "atualiza", "atualização", "atualizacao", "atualizações",
+    "обновить", "обнови", "обновление", "обновления",
+    "更新", "升级", "升級", "アップデート", "更新する", "アップグレード",
+    "bijwerken", "aktualizuj", "aktualizacja", "تحديث", "업데이트", "अपडेट",
+}
+
+
+def is_update_word(text: str) -> bool:
+    t = re.sub(r"[\s.!?。！？]+$", "", (text or "").strip()).lower()
+    return t in UPDATE_WORDS
+
+
 def parse_command(text: str) -> dict | None:
     """Sohbet metni /d komutuysa {action, query} döner: action = install | update."""
+    if is_update_word(text):
+        return {"action": "update", "query": "", "manual": True}
     m = re.fullmatch(r"\s*/d(?:\s+(.*))?\s*", text or "", re.I | re.S)
     if not m:
         return None

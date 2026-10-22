@@ -201,3 +201,84 @@ def test_server_endpoints(fake_winget, monkeypatch):
     assert client.post("/api/installer/install", json={"items": [{"id": "bad id"}]}).status_code == 409
     r = client.post("/api/installer/install", json={"items": [{"id": "7zip.7zip", "name": "7-Zip"}]})
     assert r.status_code == 200 and r.json()["kind"] == "install"
+
+
+# ---------------------------------------------------------------- "update" kelimesi: elle güncelleme
+
+LIST_OUT = """Name                      Id                          Version     Available   Source
+-----------------------------------------------------------------------------------------
+GitHub CLI                GitHub.cli                  2.102.0     2.103.0     winget
+7-Zip                     7zip.7zip                   26.05                   winget
+Some Old Tool             ARP\\Machine\\X64\\OldTool      1.0
+Visual Studio Code        Microsoft.VisualStudioCode  1.105.0                 winget
+"""
+
+
+@pytest.mark.parametrize("text", ["update", "Update", " güncelle ", "GÜNCELLE!", "actualizar", "mettre à jour",
+                                  "aktualisieren", "aggiorna", "atualizar", "обновить", "更新", "アップデート", "/update"])
+def test_update_word_any_language_opens_manual_panel(text):
+    assert installer.parse_command(text) == {"action": "update", "query": "", "manual": True}
+
+
+@pytest.mark.parametrize("text", ["update the excel file", "güncelle şu raporu", "vlc", "updater"])
+def test_sentences_are_not_update_command(text):
+    assert installer.parse_command(text) is None
+
+
+def test_d_update_stays_automatic():
+    assert installer.parse_command("/d update") == {"action": "update", "query": ""}
+
+
+async def test_installed_lists_programs_with_updates_first(fake_winget, monkeypatch):
+    async def fake(args, timeout=0, on_line=None):
+        return 0, LIST_OUT
+
+    monkeypatch.setattr(installer, "_winget", fake)
+    items = await installer.installed()
+    assert [i["id"] for i in items][0] == "GitHub.cli" and items[0]["available"] == "2.103.0" and items[0]["managed"]
+    by_id = {i["id"]: i for i in items}
+    assert by_id["7zip.7zip"]["managed"] and not by_id["7zip.7zip"]["available"]
+    old = next(i for i in items if i["name"] == "Some Old Tool")
+    assert not old["managed"] and items[-1] is old  # winget dışı en sonda
+
+
+async def test_upgrade_selected_only_and_optional_ada(fake_winget):
+    calls, _ = fake_winget
+    seen = {}
+
+    async def self_update():
+        seen["called"] = True
+        return {"state": "current", "message": "ADA güncel."}
+
+    job = installer.start_upgrade([{"id": "GitHub.cli", "name": "GitHub CLI", "version": "2.102.0", "available": "2.103.0"}], None)
+    assert job["kind"] == "update" and job["total"] == 1
+    await _wait(installer.JOB.task)
+    pub = installer.current()
+    assert pub["phase"] == "done" and pub["items"][0]["state"] == "updated"
+    assert pub["items"][0]["message"] == "2.102.0 → 2.103.0"
+    assert [c[2] for c in calls if c[0] == "upgrade"] == ["GitHub.cli"]  # yalnızca seçilen, liste taranmaz
+    assert "called" not in seen
+    installer.start_upgrade([], self_update)  # yalnızca ADA
+    await _wait(installer.JOB.task)
+    assert seen["called"]
+    with pytest.raises(installer.InstallerError):
+        installer.start_upgrade([], None)
+    with pytest.raises(installer.InstallerError):
+        installer.start_upgrade([{"id": "a; rm -rf"}], None)
+
+
+def test_server_installed_and_upgrade_endpoints(fake_winget, monkeypatch):
+    async def fake(args, timeout=0, on_line=None):
+        return 0, LIST_OUT if args[0] == "list" else "Successfully installed"
+
+    monkeypatch.setattr(installer, "_winget", fake)
+    from ada import server
+
+    client = TestClient(server.app)
+    r = client.get("/api/installer/installed")
+    assert r.status_code == 200 and r.json()[0]["id"] == "GitHub.cli"
+    evil = {"Origin": "http://evil.example"}
+    assert client.post("/api/installer/upgrade", json={"items": [{"id": "GitHub.cli"}]}, headers=evil).status_code == 403
+    assert client.post("/api/installer/upgrade", json={"items": []}).status_code == 409
+    r = client.post("/api/installer/upgrade", json={"items": [{"id": "GitHub.cli", "name": "GitHub CLI"}]})
+    assert r.status_code == 200 and r.json()["total"] == 1

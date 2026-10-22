@@ -335,6 +335,8 @@ footer { padding: 6px 22px 18px; }
 .composer { display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line-strong); border-radius: var(--r-lg); padding: 10px 10px 8px 14px; box-shadow: var(--shadow); transition: border-color .15s, box-shadow .15s; }
 .composer:focus-within { border-color: var(--accent); box-shadow: var(--shadow), 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent); }
 textarea { flex: 1; resize: none; border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit; max-height: 220px; padding: 4px 2px; }
+/* Sütun düzeninde flex: 1 (temel 0) satır yüksekliğini kilitler; kutu Composer'ın verdiği yüksekliğe uzasın */
+.composer textarea { flex: none; overflow-y: auto; }
 textarea::placeholder { color: var(--muted); }
 .composer-bar { display: flex; align-items: center; gap: 2px; margin-top: 4px; }
 .iconbtn { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 0; border-radius: 9px; background: none; color: var(--muted); }

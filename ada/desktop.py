@@ -368,6 +368,10 @@ def main() -> None:
         )
     ]
 
+    # pywebview indirmeleri varsayılan olarak iptal eder: çıktı kartlarındaki "indir" bağlantıları
+    # (a[download]) Kaydet penceresini açsın
+    webview.settings["ALLOW_DOWNLOADS"] = True
+
     window = webview.create_window(
         "ADA",
         url,

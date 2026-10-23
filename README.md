@@ -81,6 +81,20 @@ Found a bug or have an idea?
 
 Every report is read and used to improve ADA.
 
+## Open Kernel: customize ADA without forking
+
+Drop Python files into `%APPDATA%\ADA\kernel\plugins\` and ADA loads them at startup. Updates never touch that folder. A plugin can add new tools, replace built-in ones, filter or rewrite tool calls (`@kernel.before_tool`, `@kernel.after_tool`) and add rules to the system prompt (`@kernel.system`). It works with every engine (Claude, Gemini, local models), and ADA's safety chain (validation, limits, approvals, action log) always stays in place.
+
+```python
+from ada import kernel
+
+@kernel.tool("crm_lookup", "Looks up a customer in our CRM.", {"email": {"type": "string"}}, required=["email"])
+def crm_lookup(email: str) -> str:
+    return f"Customer {email}: Gold tier"
+```
+
+Full guide: [docs/KERNEL.md](docs/KERNEL.md)
+
 ## Open source
 
 ADA is open source under the [MIT license](LICENSE). You are welcome to read the code, change it and contribute.

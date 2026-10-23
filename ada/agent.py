@@ -109,6 +109,10 @@ def active_model() -> str:
     return {"gemini": config.GEMINI_MODELS[0], "selfhost": config.LLM_MODEL}.get(config.PROVIDER, config.MODEL)
 
 
+# Open Kernel: kullanıcının eklentileri (kernel/plugins/*.py) araç listesi kurulmadan önce yüklenir
+from . import kernel as _kernel  # noqa: E402
+
+_kernel.load_plugins()
 TOOLS = build_tools()
 SUBAGENT_TOOLS = build_tools(SUBAGENT_EXCLUDE)
 
@@ -209,8 +213,14 @@ def _context_block() -> dict:
     from . import skills
 
     parts = [_date_block()["text"], _os_hint(), _language_hint(), _autonomy_hint(), _memory_digest(), skills.index_text(),
-             _routines_index()]
+             _routines_index(), _kernel_system()]
     return {"type": "text", "text": "\n\n".join(p for p in parts if p)}
+
+
+def _kernel_system() -> str:
+    from .kernel.hooks import system_text
+
+    return system_text()
 
 
 def _system() -> list[dict]:
@@ -351,8 +361,15 @@ def _short(args) -> str:
 
 async def _run_tool(name: str, args) -> ToolResult:
     """Güvenlik kontrolleri + onay + çalıştırma; her çağrı işlem günlüğüne yazılır."""
+    from .kernel import hooks as khooks
+
     approved: list[bool] = []
-    result = await _run_tool_inner(name, args, approved)
+    args, blocked = await khooks.run_before(name, args)
+    if blocked:
+        result = ToolResult(blocked, is_error=True)
+    else:
+        result = await _run_tool_inner(name, args, approved)
+        result = await khooks.run_after(name, args, result)
     safety.log(name, args, ok=not result.is_error, result=result.content, approved=approved[0] if approved else None)
     if name in injection.READ_TOOLS and not result.is_error:
         hits = injection.scan(result.content)

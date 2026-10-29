@@ -8,16 +8,17 @@ ADA, bilgisayarınızda çalışan otonom bir yapay zekâ çalışanıdır: rapo
 
 ## İndir
 
-**[ADA'yı Windows için indir](https://github.com/Guardscloud/ADA/releases/latest/download/ADA-Setup.exe)** · [tüm sürümler](https://github.com/Guardscloud/ADA/releases)
+**[ADA'yı Windows için indir](https://github.com/Guardscloud/ADA/releases/latest/download/ADA-Setup.exe)** · macOS: [tüm sürümler](https://github.com/Guardscloud/ADA/releases) · Site: [guardscloud.github.io/ADA](https://guardscloud.github.io/ADA/)
 
-- Windows 10 / 11 (64 bit)
+- Windows 10 / 11 (64 bit) · macOS (Apple Silicon ve Intel)
+- Ücretsiz.
 - Yönetici izni gerekmez; yalnızca sizin kullanıcınız için kurulur.
 - İlk açılışta birkaç kısa soru sorar (ad, yapay zekâ anahtarı, özerklik, arka plan seçenekleri).
 
 
 ## Başlarken
 
-**1. Kurun.** `ADA-Setup.exe` dosyasını indirip çalıştırın. Windows **"Windows bilgisayarınızı korudu"** uyarısını gösterirse **Ek bilgi**'ye, ardından **Yine de çalıştır**'a tıklayın. Uyarının nedeni, ADA'nın Windows'un tanıdığı ücretli bir sertifika yerine kendi sertifikamızla imzalı olmasıdır. ADA açık kaynaktır; ne yaptığını koddan görebilirsiniz ve her sürüm sayfasında dosyanın SHA-256 özeti yazar.
+**1. Kurun.** `ADA-Setup.exe` dosyasını indirip çalıştırın. Windows **"Windows bilgisayarınızı korudu"** uyarısını gösterirse **Ek bilgi**'ye, ardından **Yine de çalıştır**'a tıklayın. Uyarının nedeni, ADA'nın Windows'un tanıdığı ücretli bir sertifika yerine kendi sertifikamızla imzalı olmasıdır. İndirdiğiniz dosyayı denetleyebilmeniz için GitHub her sürüm dosyasının SHA-256 özetini gösterir.
 
 **2. Yapay zekâ anahtarı ekleyin (ücretsiz).** ADA'nın çalışması için bir yapay zekâ modeli gerekir. En hızlı ücretsiz seçenek Google Gemini:
 
@@ -39,9 +40,10 @@ Anahtar yok mu? ADA yerel modellerle de çalışır: [Ollama](https://ollama.com
 
 - **Görevler:** Yazdığınız işi adım adım yapar; Word, Excel, PDF ve sunum dosyaları üretir.
 - **Rutinler:** Her gün kendiliğinden yapılacak işleri düz Markdown dosyalarıyla tanımlarsınız.
-- **Birden çok yapay zekâ:** Bu bilgisayardaki yerel modelleri (Ollama, LM Studio ve diğerleri) ve anahtarını girdiğiniz bulut modellerini (Gemini, Claude, OpenAI ve diğerleri) kullanır; işi türüne göre en uygun modele verir. Bir model sınıra takılırsa iş sıradakiyle sürer.
+- **Birden çok yapay zekâ:** Bu bilgisayardaki yerel modelleri (Ollama, LM Studio ve diğerleri) ve anahtarını girdiğiniz bulut modellerini (Gemini, Claude, OpenAI ve diğerleri) kullanır; işi türüne göre en uygun modele verir. Bir model sınıra takılırsa iş sıradakiyle sürer. İsterseniz her mesajda modeli gönder düğmesinin yanından kendiniz seçersiniz.
 - **Gözcü:** Disk, bellek, işlemci ve internet durumunu izler, sorun olursa haber verir.
 - **Kontrol sizde:** Ne zaman size soracağını siz seçersiniz; tek tuşla acil durdurma vardır.
+- **Tor (isteğe bağlı):** İlk açılışta ADA, web aramalarını ve sayfa okumayı Tor ağı üzerinden yaparak IP adresinizi sitelerden gizlemeyi önerir. Siz kabul etmedikçe hiçbir şey indirilmez.
 - **Güvenlik modu:** Bilgisayarı kapatabilecek ya da diski silebilecek komutlar güvenli modda asla çalışmaz; *onayla her şey* moduna geçerseniz ADA her seferinde size sorar.
 
 | İlk açılış soruları | ADA'nın ne kadar bağımsız çalışacağını siz seçersiniz |
@@ -81,11 +83,11 @@ Bir hata bulduysanız ya da bir fikriniz varsa:
 
 Her geri bildirim okunur ve ADA'nın geliştirilmesinde kullanılır.
 
-## Açık kaynak
+## Kaynak kod ve lisans
 
-ADA açık kaynaklıdır ([MIT lisansı](LICENSE)). Kodu inceleyebilir, değiştirebilir ve katkıda bulunabilirsiniz.
+ADA ücretsizdir. Kaynak kodu **0.5.0 sürümüne kadar açıktır**: bu depodaki kod o sürümdür ve [MIT lisansıyla](LICENSE) okunabilir, değiştirilebilir, yeniden kullanılabilir. 0.5.1'den itibaren uygulamanın çekirdeği kapalı bir depoda geliştirilir; yeni sürümler ücretsizdir ama açık kaynak değildir. [Open Kernel](docs/KERNEL.md) eklenti arayüzü açık ve destekli kalır.
 
-Kaynaktan çalıştırmak için [uv](https://docs.astral.sh/uv/) ve Node 18+ gerekir:
+Açık 0.5.0 kodunu kaynaktan çalıştırmak için [uv](https://docs.astral.sh/uv/) ve Node 18+ gerekir:
 
 ```powershell
 uv sync
@@ -96,4 +98,4 @@ uv run ada-app          # masaüstü penceresi  (yalnızca tarayıcı için: uv 
 
 Mimari, ayarlar ve geliştirme notları: [docs/GELISTIRICI.md](docs/GELISTIRICI.md). Katkılar için bir kayıt açın ya da doğrudan değişiklik isteği (pull request) gönderin.
 
-"ADA" adı ve Duck Team ördek logosu proje sahibine aittir; MIT lisansı kodu kapsar, adı ve logoyu kapsamaz.
+"ADA" adı ve Duck Team ördek logosu proje sahibine aittir; MIT lisansı bu depodaki kodu kapsar, adı ve logoyu kapsamaz.

@@ -3,8 +3,8 @@
 The Open Kernel lets you change how ADA works **without editing ADA's source code** — and without losing
 your changes when ADA updates. You drop Python files into a plugin folder; ADA loads them at startup.
 
-ADA is MIT-licensed, so you can of course also fork the repository and change anything. The kernel is the
-upgrade-safe way to do it.
+The code in this repository (ADA up to 0.5.0) is MIT-licensed, so you can also fork it and change anything.
+For current releases, whose core is closed, the kernel is the supported and upgrade-safe way to customize ADA.
 
 ## Where plugins live
 

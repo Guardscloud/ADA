@@ -8,16 +8,17 @@ ADA is an autonomous AI worker that runs on your own computer. Describe a job 鈥
 
 ## Download
 
-**[Download ADA for Windows](https://github.com/Guardscloud/ADA/releases/latest/download/ADA-Setup.exe)** 路 [all releases](https://github.com/Guardscloud/ADA/releases)
+**[Download ADA for Windows](https://github.com/Guardscloud/ADA/releases/latest/download/ADA-Setup.exe)** 路 macOS: [all releases](https://github.com/Guardscloud/ADA/releases) 路 Website: [guardscloud.github.io/ADA](https://guardscloud.github.io/ADA/en/)
 
-- Windows 10 / 11 (64-bit)
+- Windows 10 / 11 (64-bit) 路 macOS (Apple Silicon and Intel)
+- Free to use.
 - No administrator rights needed; ADA installs for your user only.
 - On first launch ADA asks a few short questions (your name, an AI key, how independently it should work, what runs in the background).
 
 
 ## Getting started
 
-**1. Install.** Download and run `ADA-Setup.exe`. If Windows shows **"Windows protected your PC"**, click **More info**, then **Run anyway**. The warning appears because ADA is signed with our own certificate rather than a paid one that Windows already knows. ADA is open source, so you can read exactly what it does, and each release page lists the file's SHA-256 so you can check your download.
+**1. Install.** Download and run `ADA-Setup.exe`. If Windows shows **"Windows protected your PC"**, click **More info**, then **Run anyway**. The warning appears because ADA is signed with our own certificate rather than a paid one that Windows already knows. GitHub shows each release file's SHA-256 so you can check your download.
 
 **2. Add an AI key (free).** ADA needs an AI model to work. The quickest free option is Google Gemini:
 
@@ -39,9 +40,10 @@ No key? ADA also works with local models: install [Ollama](https://ollama.com), 
 
 - **Tasks:** works through a job step by step and produces Word, Excel, PDF and presentation files.
 - **Routines:** jobs ADA does by itself every day, written as plain Markdown files.
-- **Many AI models:** uses local models on your machine (Ollama, LM Studio and others) and any cloud models you add a key for (Gemini, Claude, OpenAI and more), and picks the best fit for each kind of work. If one model hits a limit, the job continues with the next.
+- **Many AI models:** uses local models on your machine (Ollama, LM Studio and others) and any cloud models you add a key for (Gemini, Claude, OpenAI and more), and picks the best fit for each kind of work. If one model hits a limit, the job continues with the next. You can also pick the model yourself for any message, right next to the send button.
 - **Watchdog:** keeps an eye on disk, memory, CPU and internet, and tells you when something is wrong.
 - **You stay in control:** you choose when ADA must ask before acting, and there is a one-click emergency stop.
+- **Tor (optional):** on first launch ADA offers to send its web searches and page reads through the Tor network, hiding your IP address from websites. Nothing is downloaded unless you say yes.
 - **Safety mode:** commands that could shut down the computer or wipe a disk never run in safe mode; if you switch to *anything with approval*, ADA asks you every single time.
 
 | First-run setup | You decide how independent ADA is |
@@ -95,11 +97,11 @@ def crm_lookup(email: str) -> str:
 
 Full guide: [docs/KERNEL.md](docs/KERNEL.md)
 
-## Open source
+## Source code and license
 
-ADA is open source under the [MIT license](LICENSE). You are welcome to read the code, change it and contribute.
+The ADA app is free to use. Its source code is **open up to version 0.5.0**: the code in this repository is that version, under the [MIT license](LICENSE), and you are welcome to read, change and reuse it. From 0.5.1 on, the app's core is developed in a private repository, so newer releases are free but not open source. The [Open Kernel](docs/KERNEL.md) plugin interface stays public and supported.
 
-To run from source you need [uv](https://docs.astral.sh/uv/) and Node 18+:
+To run the open 0.5.0 code from source you need [uv](https://docs.astral.sh/uv/) and Node 18+:
 
 ```powershell
 uv sync
@@ -110,4 +112,4 @@ uv run ada-app          # desktop window  (browser only: uv run ada)
 
 Architecture, settings and development notes are in [docs/GELISTIRICI.md](docs/GELISTIRICI.md) (Turkish). The code comments and the interface source strings are in Turkish; other languages come from the dictionaries in `frontend/public/assets/i18n`. To contribute, open an issue or send a pull request.
 
-The name "ADA" and the Duck Team duck logo belong to the project owner; the MIT license covers the code, not the name or the logo.
+The name "ADA" and the Duck Team duck logo belong to the project owner; the MIT license covers the code in this repository, not the name or the logo.

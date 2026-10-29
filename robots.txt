@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://guardscloud.github.io/ADA/sitemap.xml

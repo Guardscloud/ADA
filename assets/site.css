@@ -118,6 +118,7 @@ code { font-size: .92em; background: var(--surface-2); padding: .1em .35em; bord
   border-radius: 18px; padding: 10px; box-shadow: var(--shadow);
 }
 .frame img, .frame video { border-radius: 10px; width: 100%; aspect-ratio: 960 / 654; object-fit: cover; background: var(--surface-2); }
+.frame video { aspect-ratio: 16 / 9; object-fit: contain; height: auto; }
 .frame figcaption { color: var(--muted); font-size: .9rem; text-align: center; padding: 10px 6px 4px; }
 .shots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 24px; }
 .shots figure { margin: 0; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px; }

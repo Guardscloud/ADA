@@ -83,6 +83,16 @@ Bir hata bulduysanız ya da bir fikriniz varsa:
 
 Her geri bildirim okunur ve ADA'nın geliştirilmesinde kullanılır.
 
+## Üniversiteler ve araştırmacılar için
+
+ADA, eğitim ve araştırma amaçlı kullanım dahil ücretsizdir. Özellikle şu konularda çalışanlardan haber almak isteriz:
+
+- yapay zekâ ajanlarında insan denetimi, iş devri ve güven,
+- öğrencilerin yapay zekâ ajanlarıyla birlikte çalışmayı öğrendiği dersler ve atölyeler,
+- ADA'yı [Open Kernel](docs/KERNEL.md) eklenti arayüzüyle genişleten öğrenci projeleri.
+
+ADA'yı bir araştırma grubuyla ya da derste denemek, eleştirel geri bildirim vermek veya kısa bir çevrim içi demo ayarlamak isterseniz [bir issue açın](https://github.com/Guardscloud/ADA/issues/new/choose) ya da uygulamada **Kontrol → Geri bildirim ve destek** menüsünü kullanın. Eleştiri de ilgi kadar değerlidir.
+
 ## Kaynak kod ve lisans
 
 ADA ücretsizdir. Kaynak kodu **0.5.0 sürümüne kadar açıktır**: bu depodaki kod o sürümdür ve [MIT lisansıyla](LICENSE) okunabilir, değiştirilebilir, yeniden kullanılabilir. 0.5.1'den itibaren uygulamanın çekirdeği kapalı bir depoda geliştirilir; yeni sürümler ücretsizdir ama açık kaynak değildir. [Open Kernel](docs/KERNEL.md) eklenti arayüzü açık ve destekli kalır.

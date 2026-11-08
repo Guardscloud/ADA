@@ -83,6 +83,16 @@ Found a bug or have an idea?
 
 Every report is read and used to improve ADA.
 
+## For universities and researchers
+
+ADA is free to use, including for teaching and research. We'd especially like to hear from people working on:
+
+- human oversight, delegation and trust in AI agents,
+- courses or workshops where students learn to work alongside AI agents,
+- student projects that extend ADA through the [Open Kernel](docs/KERNEL.md) plugin interface.
+
+If you'd like to try ADA with a research group or a class, give critical feedback or arrange a short online demo, [open an issue](https://github.com/Guardscloud/ADA/issues/new/choose) or use **Control → Feedback and support** in the app. Criticism is as welcome as interest.
+
 ## Open Kernel: customize ADA without forking
 
 Drop Python files into `%APPDATA%\ADA\kernel\plugins\` and ADA loads them at startup. Updates never touch that folder. A plugin can add new tools, replace built-in ones, filter or rewrite tool calls (`@kernel.before_tool`, `@kernel.after_tool`) and add rules to the system prompt (`@kernel.system`). It works with every engine (Claude, Gemini, local models), and ADA's safety chain (validation, limits, approvals, action log) always stays in place.
